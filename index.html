@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATG & Calisthenics Hybrid Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        cardBorder: '#334155',
+                        accent: '#6366f1',
+                        accentHover: '#4f46e5',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white pb-12">
+
+    <!-- Toast Notification Banner -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl font-medium text-sm">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toastMessage">All changes saved successfully!</span>
+    </div>
+
+    <section id="authScreen" class="min-h-screen flex items-center justify-center px-4 py-10">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-md w-full p-7 shadow-2xl space-y-5">
+            <div class="text-center">
+                <div class="inline-flex bg-indigo-600 p-3 rounded-xl text-white shadow-lg shadow-indigo-600/30 mb-3">
+                    <i class="fa-solid fa-dumbbell text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white">Workout Logbook</h1>
+                <p class="text-sm text-slate-400 mt-1">Sign in to sync your workouts across devices.</p>
+            </div>
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="authEmail" class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+                    <input id="authEmail" type="email" autocomplete="email" required class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label for="authPassword" class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                    <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                </div>
+                <p id="authMessage" role="status" class="hidden text-sm text-rose-300"></p>
+                <button id="authSubmitButton" type="submit" class="w-full px-4 py-2.5 bg-accent hover:bg-accentHover text-white rounded-xl text-sm font-bold">Sign In</button>
+            </form>
+            <button id="authModeButton" type="button" onclick="toggleAuthMode()" class="w-full text-sm text-indigo-300 hover:text-indigo-200">Need an account? Create one</button>
+            <p class="text-[11px] leading-relaxed text-slate-500 text-center">Use the same account on your phone and computer. Your data is private to your account.</p>
+        </div>
+    </section>
+
+    <!-- Header Section -->
+    <header id="appHeader" class="hidden bg-cardBg border-b border-cardBorder sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-dumbbell text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-white leading-tight">ATG & Calisthenics Hybrid</h1>
+                        <p class="text-xs text-slate-400">Bulletproofing & Strength Dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs & Actions -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
+                <nav class="flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
+                    <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
+                        <i class="fa-solid fa-list-check mr-1.5"></i>Directory
+                    </button>
+                    <button onclick="switchTab('tracker')" id="nav-tracker" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-chart-line mr-1.5"></i>Logbook
+                    </button>
+                    <button onclick="switchTab('calendar')" id="nav-calendar" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-calendar-days mr-1.5"></i>Calendar
+                    </button>
+                    <button onclick="switchTab('rules')" id="nav-rules" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-book mr-1.5"></i>Rules & Standards
+                    </button>
+                </nav>
+
+                <!-- Data Controls & Master Save -->
+                <div class="flex items-center gap-1.5">
+                    <span id="signedInEmail" class="hidden md:inline text-[11px] text-slate-400 px-1"></span>
+                    <button onclick="saveAllChanges()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 active:scale-95">
+                        <i class="fa-solid fa-floppy-disk"></i> Save All
+                    </button>
+                    <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Export Backup JSON">
+                        <i class="fa-solid fa-download"></i> Export
+                    </button>
+                    <label class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1" title="Import Backup JSON">
+                        <i class="fa-solid fa-upload"></i> Import
+                        <input type="file" id="importFile" onchange="importData(event)" accept=".json" class="hidden">
+                    </label>
+                    <button onclick="openResetModal()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Reset Defaults">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button onclick="signOut()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold transition-all" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="appMain" class="hidden flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- TAB 1: Exercise Directory & Video Library -->
+        <section id="tab-program" class="space-y-6">
+            <!-- Search & Category Filters -->
+            <div class="flex flex-col lg:flex-row gap-4 justify-between items-center bg-cardBg p-4 rounded-2xl border border-cardBorder shadow-sm">
+                <div class="relative w-full lg:w-72">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </span>
+                    <input type="text" id="exerciseSearch" oninput="renderExercises()" placeholder="Search exercise or standard..." 
+                           class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs focus:outline-none focus:border-accent text-white placeholder-slate-500">
+                </div>
+                <div class="flex flex-wrap gap-1.5 w-full lg:w-auto items-center justify-between">
+                    <div id="categoryFilterButtons" class="flex flex-wrap gap-1.5">
+                        <!-- Dynamic Day Filter Buttons -->
+                    </div>
+                    <button onclick="openAddExerciseModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 whitespace-nowrap ml-auto">
+                        <i class="fa-solid fa-plus"></i> Add Exercise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Exercises Grid Container -->
+            <div id="exerciseContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Dynamically Rendered -->
+            </div>
+        </section>
+
+        <!-- TAB 2: Workout Logbook & Tracker -->
+        <section id="tab-tracker" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-user text-accent"></i> Workout Logbook
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Log training sessions with detailed sets, reps, load, and category tagging.</p>
+                    </div>
+                    <button onclick="openLogModal()" class="bg-accent hover:bg-accentHover text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-accent/25 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Log Complete Session
+                    </button>
+                </div>
+
+                <!-- Log Filter Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between bg-slate-900 p-3.5 rounded-xl border border-cardBorder gap-3">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <i class="fa-solid fa-filter text-slate-400 text-xs"></i>
+                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Filter Sessions:</span>
+                    </div>
+                    <select id="logCategoryFilter" onchange="renderWorkoutSessions()" class="w-full sm:w-64 px-3.5 py-2 bg-slate-950 border border-cardBorder rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-accent">
+                        <option value="all">All Categories</option>
+                        <option value="Warm-Up">Warm-Up</option>
+                        <option value="Push">Push</option>
+                        <option value="Pull">Pull</option>
+                        <option value="Legs">Legs</option>
+                        <option value="Core">Core</option>
+                        <option value="Cardio">Cardio</option>
+                        <option value="Mobility / Stability">Mobility / Stability</option>
+                    </select>
+                </div>
+
+                <!-- Session Log Container -->
+                <div id="sessionLogContainer" class="space-y-4">
+                    <!-- Dynamically Populated -->
+                </div>
+
+                <div id="emptyLogState" class="hidden text-center py-12 text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-cardBorder">
+                    <i class="fa-regular fa-clipboard text-4xl mb-3"></i>
+                    <p class="text-sm font-medium">No workout logs recorded for this filter yet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Interactive Calendar & Planner -->
+        <section id="tab-calendar" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-days text-accent"></i> Calendar & Schedule Planner
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Plan target workout categories, schedule rest days, and track completion.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeMonth(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-cardBorder text-xs transition-all"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="calendarMonthYear" class="text-sm font-bold text-white min-w-[140px] text-center"></span>
+                        <button onclick="changeMonth(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-cardBorder text-xs transition-all"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="goToCurrentMonth()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 px-3 py-2 rounded-xl text-xs font-semibold transition-all ml-1">Today</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Days Header -->
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-cardBorder">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2">
+                    <!-- Dynamically Populated -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Core Rules & Standards -->
+        <section id="tab-rules" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-book-bookmark text-amber-500"></i> Core ATG & Calisthenics Principles
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Add, edit, or customize rules and progression standards.</p>
+                    </div>
+                    <button onclick="openAddRuleModal()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/20 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Add Rule
+                    </button>
+                </div>
+
+                <div id="rulesListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Rule Cards -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: Add / Edit Exercise Modal -->
+    <div id="exerciseModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-5">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-3">
+                <h3 id="exerciseModalTitle" class="text-lg font-bold text-white">Add Custom Exercise</h3>
+                <button onclick="closeExerciseModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="exerciseForm" onsubmit="handleSaveExercise(event)" class="space-y-4">
+                <input type="hidden" id="editExerciseId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Exercise Name</label>
+                    <input type="text" id="modalExName" required placeholder="e.g. Poliquin Step Up" class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+                    <select id="modalExCategory" class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                        <option value="Warm-Up">Warm-Up</option>
+                        <option value="Push">Push</option>
+                        <option value="Pull">Pull</option>
+                        <option value="Legs">Legs</option>
+                        <option value="Core">Core</option>
+                        <option value="Cardio">Cardio</option>
+                        <option value="Mobility / Stability">Mobility / Stability</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Standard / Target</label>
+                    <textarea id="modalExStandard" rows="3" required placeholder="Describe reps, load, or standard..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">YouTube Video Link (Optional)</label>
+                    <input type="url" id="modalExVideo" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-cardBorder">
+                    <button type="button" onclick="closeExerciseModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-accent hover:bg-accentHover text-white rounded-xl text-xs font-bold shadow-md shadow-accent/20">Save Exercise</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Video Player Embed Modal -->
+    <div id="videoModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-3xl w-full p-5 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-3">
+                <div>
+                    <h3 id="modalVideoTitle" class="text-base font-bold text-white">Exercise Video Preview</h3>
+                    <p id="modalVideoSubtitle" class="text-xs text-slate-400 mt-0.5"></p>
+                </div>
+                <button onclick="closeVideoModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="videoEmbedContainer" class="aspect-video w-full bg-slate-950 rounded-xl overflow-hidden border border-cardBorder flex items-center justify-center">
+                <!-- iFrame loaded dynamically -->
+            </div>
+            <div class="flex justify-between items-center text-xs">
+                <a id="modalExternalLink" href="#" target="_blank" class="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+                    Open Directly on YouTube <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+                <button onclick="closeVideoModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Workout Session Logger Modal -->
+    <div id="logModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-accent"></i> Log Training Session
+                </h3>
+                <button onclick="closeLogModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="workoutLogForm" onsubmit="handleSaveSession(event)" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
+                        <input type="date" id="sessionDate" required class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category / Day</label>
+                        <select id="sessionCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                            <option value="Warm-Up">Warm-Up</option>
+                            <option value="Push">Push</option>
+                            <option value="Pull">Pull</option>
+                            <option value="Legs">Legs</option>
+                            <option value="Core">Core</option>
+                            <option value="Cardio">Cardio</option>
+                            <option value="Mobility / Stability">Mobility / Stability</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Exercises Performed</label>
+                        <button type="button" onclick="addExerciseRowToModal()" class="text-indigo-400 hover:text-indigo-300 text-xs font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Add Row
+                        </button>
+                    </div>
+                    <div id="modalExerciseRowsContainer" class="space-y-3">
+                        <!-- Dynamic Exercise Entry Rows -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Session Notes (Optional)</label>
+                    <textarea id="sessionNotes" rows="2" placeholder="Energy levels, form notes, tempo details..." class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-cardBorder">
+                    <button type="button" onclick="closeLogModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-accent hover:bg-accentHover text-white rounded-xl text-xs font-bold shadow-md shadow-accent/20">Save Session Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Core Rule Add/Edit Modal -->
+    <div id="ruleModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-3">
+                <h3 id="ruleModalTitle" class="text-base font-bold text-white">Add Core Principle</h3>
+                <button onclick="closeRuleModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="ruleForm" onsubmit="handleSaveRule(event)" class="space-y-4">
+                <input type="hidden" id="editRuleId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Rule Title</label>
+                    <input type="text" id="modalRuleTitle" required placeholder="e.g. 1-2 RIR Principle" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Rule Description</label>
+                    <textarea id="modalRuleDesc" rows="3" required placeholder="Explain the principle or standard..." class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-cardBorder">
+                    <button type="button" onclick="closeRuleModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-600/20">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Calendar Day Planner Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-cardBorder pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-check text-accent"></i> Plan Calendar Entry
+                </h3>
+                <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSaveSchedule(event)" class="space-y-4">
+                <input type="hidden" id="scheduleDateStr">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Category / Day Type</label>
+                    <select id="scheduleCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                        <option value="Warm-Up">Warm-Up</option>
+                        <option value="Push">Push</option>
+                        <option value="Pull">Pull</option>
+                        <option value="Legs">Legs</option>
+                        <option value="Core">Core</option>
+                        <option value="Cardio">Cardio</option>
+                        <option value="Mobility / Stability">Mobility / Stability</option>
+                        <option value="Rest">Rest Day</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Day Focus / Custom Notes</label>
+                    <input type="text" id="scheduleNotes" placeholder="e.g. Focus on deep split squats & ankle mobility" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-cardBorder">
+                    <button type="button" id="deleteScheduleBtn" onclick="handleDeleteSchedule()" class="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Remove Day Entry
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeScheduleModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-accent hover:bg-accentHover text-white rounded-xl text-xs font-bold">Save Day</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 6: Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-white">Reset to Default Data?</h3>
+                <p class="text-xs text-slate-400 mt-1">This will erase all custom exercises, video links, logged workouts, and rules and restore factory sample data.</p>
+            </div>
+            <div class="flex justify-center gap-3 pt-2">
+                <button onclick="closeResetModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+                <button onclick="confirmResetDefaults()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold">Yes, Reset All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Data Architecture & Interactivity -->
+    <script>
+        const STORAGE_KEY = 'atg_hybrid_dashboard_v5';
+        const SUPABASE_URL = 'https://hjqjpgskmxvnygzwhhee.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QNmIlPYjv2wbQzU2mh_UHQ_YlXvwU91';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const CLOUD_TABLE = 'workout_dashboard';
+
+        // Default Sample Exercises Taxonomy (7 Categories)
+        const DEFAULT_EXERCISES = [
+            // Warm-Up
+            { id: 'wu-1', name: 'Reverse Sled Drag', category: 'Warm-Up', standard: 'ATG standard: ~50% bodyweight for ~40 meters maintaining smooth heel-to-toe rolling rhythm.', videoUrl: 'https://www.youtube.com/watch?v=0k9O0eB8x70' },
+            { id: 'wu-2', name: 'Standing Tibialis Raise', category: 'Warm-Up', standard: 'ATG standard: 25 consecutive reps, pausing 2s at top peak contraction.', videoUrl: '' },
+            { id: 'wu-3', name: 'Banded Shoulder Dislocates & Hang', category: 'Warm-Up', standard: 'General shoulder decompression & overhead mobility.', videoUrl: '' },
+
+            // Push
+            { id: 'push-1', name: 'Incline Dumbbell Press (45°)', category: 'Push', standard: 'ATG standard: 66% bodyweight total for 10 reps (33% BW in each hand).', videoUrl: '' },
+            { id: 'push-2', name: 'ATG Dip', category: 'Push', standard: 'ATG standard: 12 strict reps touching biceps to forearms.', videoUrl: '' },
+            { id: 'push-3', name: 'Push-Up Progression', category: 'Push', standard: 'Calisthenics standard: Build to 50 strict chest-to-floor reps.', videoUrl: '' },
+
+            // Pull
+            { id: 'pull-1', name: 'ATG Chin-Up', category: 'Pull', standard: 'ATG standard: 10 full extension reps. Chest touches bar at top.', videoUrl: '' },
+            { id: 'pull-2', name: 'Cross Bench Pullover', category: 'Pull', standard: 'ATG standard: 25% bodyweight for 10 controlled reps.', videoUrl: '' },
+            { id: 'pull-3', name: 'Inverted Ring Rows', category: 'Pull', standard: 'Calisthenics standard: 15 strict reps with feet elevated.', videoUrl: '' },
+
+            // Legs
+            { id: 'legs-1', name: 'ATG Split Squat', category: 'Legs', standard: 'ATG standard: 25% bodyweight per hand (dumbbells) on flat ground for 5x5.', videoUrl: '' },
+            { id: 'legs-2', name: 'Poliquin Step-Up', category: 'Legs', standard: 'ATG standard: 20 reps with 66% BW on back, 4" elevation, 45° heel angle.', videoUrl: '' },
+            { id: 'legs-3', name: 'Jefferson Curl', category: 'Legs', standard: 'ATG standard: 10 reps with 25% BW, wrists passing below toes.', videoUrl: '' },
+            { id: 'legs-4', name: 'Nordic Hamstring Curl', category: 'Legs', standard: 'ATG standard: 10 unassisted reps with 4s eccentric & 1s pause.', videoUrl: '' },
+
+            // Core
+            { id: 'core-1', name: 'Hanging Leg Raise', category: 'Core', standard: 'ATG standard: Toes-to-bar for 10 reps with 2s eccentric lowering.', videoUrl: '' },
+            { id: 'core-2', name: 'L-Sit Hold', category: 'Core', standard: 'Calisthenics standard: 20 seconds hold on parallettes or floor.', videoUrl: '' },
+
+            // Cardio
+            { id: 'cardio-1', name: 'Zone 2 Sled Drag / Run', category: 'Cardio', standard: '30–45 minutes continuous aerobic pace maintaining nasal breathing.', videoUrl: '' },
+
+            // Mobility / Stability
+            { id: 'stab-1', name: 'Seated Good Morning', category: 'Mobility / Stability', standard: 'ATG standard: 50% BW on back, chest to bench, zero lumbar rounding.', videoUrl: '' },
+            { id: 'stab-2', name: 'Elephant Walk', category: 'Mobility / Stability', standard: '30 reps per leg with palms flat or fingertips touching floor.', videoUrl: '' }
+        ];
+
+        const DEFAULT_RULES = [
+            { id: 'rule-1', title: '1-2 Reps In Reserve (RIR)', desc: 'Train with 1-2 reps left in the tank on early sets. Take only the final set of a exercise near failure.' },
+            { id: 'rule-2', title: 'Full Range of Motion First', desc: 'Prioritize full joint angles (biceps to forearm, hamstrings to calf) before scaling load.' },
+            { id: 'rule-3', title: 'Consistent Progression', desc: 'Hit maximum target reps across all sets before increasing weight or advancing leverage.' },
+            { id: 'rule-4', title: 'Honest Logging', desc: 'Track sets, load, and form quality accurately. Rest 2-3 minutes on heavy compound lifts.' }
+        ];
+
+        // Central State Management
+        let appState = {
+            exercises: [],
+            videoLinks: {}, // Explicit map: id -> URL (can be "")
+            workoutSessions: [],
+            rules: [],
+            calendarSchedule: {}
+        };
+
+        let currentDayFilter = 'all';
+        let currentCalendarDate = new Date();
+        let activeScheduleDateStr = null;
+        let currentUser = null;
+        let cloudReady = false;
+        let cloudSyncTimer = null;
+        let cloudSyncChain = Promise.resolve();
+        let authMode = 'signin';
+
+        // Initialize Application State
+        window.onload = function() {
+            initializeAuth();
+        };
+
+        async function initializeAuth() {
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                if (error) throw error;
+                if (data.session) await activateAccount(data.session.user);
+            } catch (error) {
+                console.error('Unable to restore the Supabase session:', error);
+                showAuthMessage('Could not connect to your account. Check your connection and reload.');
+            }
+        }
+
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            const button = document.getElementById('authSubmitButton');
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            button.disabled = true;
+            button.textContent = authMode === 'signup' ? 'Creating account...' : 'Signing in...';
+            showAuthMessage('');
+
+            try {
+                if (authMode === 'signup') {
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                    if (error) throw error;
+                    if (data.session) {
+                        await activateAccount(data.session.user);
+                    } else {
+                        showAuthMessage('Account created. Check your email to confirm it, then sign in.');
+                    }
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    await activateAccount(data.user);
+                }
+            } catch (error) {
+                console.error('Authentication failed:', error);
+                showAuthMessage(error.message || 'Could not sign in. Please try again.');
+            } finally {
+                button.disabled = false;
+                button.textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
+            }
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'signin' ? 'signup' : 'signin';
+            document.getElementById('authSubmitButton').textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
+            document.getElementById('authModeButton').textContent = authMode === 'signup'
+                ? 'Already have an account? Sign in'
+                : 'Need an account? Create one';
+            document.getElementById('authPassword').autocomplete = authMode === 'signup' ? 'new-password' : 'current-password';
+            showAuthMessage('');
+        }
+
+        function showAuthMessage(message) {
+            const element = document.getElementById('authMessage');
+            element.textContent = message;
+            element.classList.toggle('hidden', !message);
+        }
+
+        async function activateAccount(user) {
+            currentUser = user;
+            cloudReady = false;
+            try {
+                await loadCloudState(user.id);
+                cloudReady = true;
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appHeader').classList.remove('hidden');
+                document.getElementById('appMain').classList.remove('hidden');
+                document.getElementById('signedInEmail').textContent = user.email || '';
+                renderCategoryFilterButtons();
+                renderExercises();
+                renderWorkoutSessions();
+                renderRules();
+                renderCalendar();
+                document.getElementById('sessionDate').valueAsDate = new Date();
+            } catch (error) {
+                currentUser = null;
+                cloudReady = false;
+                console.error('Unable to load account data:', error);
+                showAuthMessage('Could not load cloud data. Check your Supabase setup and reload.');
+            }
+        }
+
+        async function signOut() {
+            try {
+                if (cloudReady) await syncStateToCloud();
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) throw error;
+                currentUser = null;
+                cloudReady = false;
+                document.getElementById('appHeader').classList.add('hidden');
+                document.getElementById('appMain').classList.add('hidden');
+                document.getElementById('authScreen').classList.remove('hidden');
+            } catch (error) {
+                console.error('Unable to sign out:', error);
+                triggerToast('Could not sign out. Please try again.');
+            }
+        }
+
+        function applySavedState(parsed) {
+            appState.exercises = Array.isArray(parsed.exercises) ? parsed.exercises : [...DEFAULT_EXERCISES];
+            appState.videoLinks = parsed.videoLinks && typeof parsed.videoLinks === 'object' ? parsed.videoLinks : {};
+            appState.workoutSessions = Array.isArray(parsed.workoutSessions) ? parsed.workoutSessions : [];
+            appState.rules = Array.isArray(parsed.rules) ? parsed.rules : [...DEFAULT_RULES];
+            appState.calendarSchedule = parsed.calendarSchedule && typeof parsed.calendarSchedule === 'object'
+                ? parsed.calendarSchedule
+                : {};
+        }
+
+        async function loadCloudState(userId) {
+            const { data, error } = await supabaseClient
+                .from(CLOUD_TABLE)
+                .select('state')
+                .eq('user_id', userId)
+                .maybeSingle();
+            if (error) throw error;
+
+            if (data) {
+                applySavedState(data.state || {});
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+                return;
+            }
+
+            loadState();
+            await writeCloudState(userId);
+        }
+
+        async function writeCloudState(userId) {
+            const { error } = await supabaseClient
+                .from(CLOUD_TABLE)
+                .upsert({
+                    user_id: userId,
+                    state: appState,
+                    updated_at: new Date().toISOString()
+                });
+            if (error) throw error;
+        }
+
+        function scheduleCloudSave() {
+            clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(() => {
+                syncStateToCloud().catch(error => {
+                    console.error('Cloud sync failed:', error);
+                    triggerToast('Saved on this device, but cloud sync failed. Try Save All again.');
+                });
+            }, 500);
+        }
+
+        function syncStateToCloud() {
+            if (!currentUser || !cloudReady) return Promise.resolve();
+            const userId = currentUser.id;
+            const pendingSave = cloudSyncChain.catch(() => {}).then(async () => {
+                if (!currentUser || currentUser.id !== userId) return;
+                await writeCloudState(userId);
+                triggerToast('Workout data synced to your account.');
+            });
+            cloudSyncChain = pendingSave;
+            return pendingSave;
+        }
+
+        function loadState() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    appState.exercises = parsed.exercises || DEFAULT_EXERCISES;
+                    appState.videoLinks = parsed.videoLinks || {};
+                    appState.workoutSessions = parsed.workoutSessions || [];
+                    appState.rules = parsed.rules || DEFAULT_RULES;
+                    appState.calendarSchedule = parsed.calendarSchedule || {};
+                    return;
+                } catch(e) {
+                    console.error("Error parsing storage state:", e);
+                }
+            }
+            // Seed defaults
+            appState.exercises = [...DEFAULT_EXERCISES];
+            appState.videoLinks = {};
+            DEFAULT_EXERCISES.forEach(ex => {
+                if (ex.videoUrl) appState.videoLinks[ex.id] = ex.videoUrl;
+            });
+            appState.workoutSessions = [];
+            appState.rules = [...DEFAULT_RULES];
+            appState.calendarSchedule = {};
+            saveAllChanges(false);
+        }
+
+        // Master Save to LocalStorage
+        function saveAllChanges(showToast = true) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (error) {
+                console.error('Unable to save data in this browser:', error);
+                triggerToast('Could not save data on this device.');
+                return;
+            }
+            if (currentUser && cloudReady) scheduleCloudSave();
+            if (showToast) {
+                triggerToast(currentUser ? "Saved on this device; syncing to your account..." : "Saved on this device.");
+            }
+        }
+
+        function triggerToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Navigation Tab Switcher
+        function switchTab(tabId) {
+            ['program', 'tracker', 'calendar', 'rules'].forEach(t => {
+                const elem = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                if (elem) elem.classList.add('hidden');
+                if (nav) nav.className = "px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white";
+            });
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeNav) activeNav.className = "px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md";
+        }
+
+        // --- Category Filters & Directory ---
+        const CATEGORIES = ['Warm-Up', 'Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability'];
+
+        function renderCategoryFilterButtons() {
+            const container = document.getElementById('categoryFilterButtons');
+            let html = `<button onclick="filterDay('all')" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20">All</button>`;
+            CATEGORIES.forEach(cat => {
+                html += `<button onclick="filterDay('${cat}')" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-cardBorder text-slate-300 hover:bg-slate-800 transition-all">${cat}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterDay(cat) {
+            currentDayFilter = cat;
+            document.querySelectorAll('.day-filter-btn').forEach(btn => {
+                btn.className = "day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-cardBorder text-slate-300 hover:bg-slate-800 transition-all";
+            });
+            event.currentTarget.className = "day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20";
+            renderExercises();
+        }
+
+        function renderExercises() {
+            const container = document.getElementById('exerciseContainer');
+            const query = (document.getElementById('exerciseSearch').value || '').toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = appState.exercises.filter(ex => {
+                const matchesCat = currentDayFilter === 'all' || ex.category === currentDayFilter;
+                const matchesQuery = ex.name.toLowerCase().includes(query) || ex.standard.toLowerCase().includes(query);
+                return matchesCat && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-cardBorder">
+                        <i class="fa-solid fa-magnifying-glass text-3xl mb-2"></i>
+                        <p class="text-sm">No exercises found matching your filter.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(ex => {
+                // Priority: User Explicit Video Map entry over default URL
+                const savedLink = appState.videoLinks.hasOwnProperty(ex.id) ? appState.videoLinks[ex.id] : (ex.videoUrl || '');
+                const hasLink = savedLink.trim() !== '';
+
+                const card = document.createElement('div');
+                card.className = 'bg-cardBg border border-cardBorder rounded-2xl p-5 flex flex-col justify-between shadow-sm hover:border-slate-700 transition-all group';
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-900 text-indigo-400 border border-cardBorder uppercase tracking-wider">${ex.category}</span>
+                            <div class="flex items-center gap-1.5">
+                                ${hasLink ? `
+                                    <button onclick="openVideoModal('${ex.id}')" class="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5">
+                                        <i class="fa-solid fa-play text-[10px]"></i> Watch
+                                    </button>
+                                ` : ''}
+                                <button onclick="openEditExerciseModal('${ex.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all" title="Edit Exercise">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteExercise('${ex.id}')" class="bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all" title="Delete Exercise">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-white text-base leading-snug">${ex.name}</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3 rounded-xl border border-cardBorder/80">
+                            <strong class="text-slate-400 uppercase text-[10px] block mb-0.5">Standard / Target:</strong> ${ex.standard}
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-cardBorder/80 mt-3 space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase">YouTube Link</label>
+                        <div class="flex gap-2">
+                            <input type="url" id="link-input-${ex.id}" value="${savedLink}" placeholder="Paste YouTube link..." 
+                                   class="w-full px-3 py-1.5 bg-slate-900 border border-cardBorder rounded-xl text-xs focus:outline-none focus:border-accent text-white placeholder-slate-600">
+                            <button onclick="saveIndividualVideoLink('${ex.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all" title="Save Link">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function saveIndividualVideoLink(id) {
+            const inputVal = document.getElementById(`link-input-${id}`).value.trim();
+            // EXPLICIT REMOVAL: Store empty string explicitly
+            appState.videoLinks[id] = inputVal;
+            saveAllChanges(true);
+            renderExercises();
+        }
+
+        // --- Exercise Modal CRUD ---
+        function openAddExerciseModal() {
+            document.getElementById('exerciseModalTitle').innerText = 'Add Custom Exercise';
+            document.getElementById('editExerciseId').value = '';
+            document.getElementById('exerciseForm').reset();
+            document.getElementById('exerciseModal').classList.remove('hidden');
+        }
+
+        function openEditExerciseModal(id) {
+            const ex = appState.exercises.find(e => e.id === id);
+            if (!ex) return;
+
+            document.getElementById('exerciseModalTitle').innerText = 'Edit Exercise';
+            document.getElementById('editExerciseId').value = ex.id;
+            document.getElementById('modalExName').value = ex.name;
+            document.getElementById('modalExCategory').value = ex.category;
+            document.getElementById('modalExStandard').value = ex.standard;
+            document.getElementById('modalExVideo').value = appState.videoLinks[ex.id] || ex.videoUrl || '';
+            document.getElementById('exerciseModal').classList.remove('hidden');
+        }
+
+        function closeExerciseModal() {
+            document.getElementById('exerciseModal').classList.add('hidden');
+        }
+
+        function handleSaveExercise(event) {
+            event.preventDefault();
+            const id = document.getElementById('editExerciseId').value;
+            const name = document.getElementById('modalExName').value.trim();
+            const category = document.getElementById('modalExCategory').value;
+            const standard = document.getElementById('modalExStandard').value.trim();
+            const videoUrl = document.getElementById('modalExVideo').value.trim();
+
+            if (id) {
+                // Update Existing
+                const ex = appState.exercises.find(e => e.id === id);
+                if (ex) {
+                    ex.name = name;
+                    ex.category = category;
+                    ex.standard = standard;
+                }
+                appState.videoLinks[id] = videoUrl;
+            } else {
+                // Create New
+                const newId = 'ex-' + Date.now();
+                appState.exercises.push({ id: newId, name, category, standard });
+                appState.videoLinks[newId] = videoUrl;
+            }
+
+            saveAllChanges(true);
+            renderExercises();
+            closeExerciseModal();
+        }
+
+        function deleteExercise(id) {
+            appState.exercises = appState.exercises.filter(e => e.id !== id);
+            delete appState.videoLinks[id];
+            saveAllChanges(true);
+            renderExercises();
+        }
+
+        // --- YouTube Embed Normalizer ---
+        function getEmbedUrl(url) {
+            if (!url) return '';
+            let videoId = '';
+            try {
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                } else if (url.includes('youtube.com/watch')) {
+                    const params = new URLSearchParams(new URL(url).search);
+                    videoId = params.get('v');
+                } else if (url.includes('youtube.com/embed/')) {
+                    videoId = url.split('embed/')[1]?.split('?')[0];
+                } else if (url.includes('youtube.com/shorts/')) {
+                    videoId = url.split('shorts/')[1]?.split('?')[0];
+                }
+            } catch(e) {}
+
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        }
+
+        function openVideoModal(id) {
+            const ex = appState.exercises.find(e => e.id === id);
+            const url = appState.videoLinks[id] || ex?.videoUrl || '';
+            if (!ex || !url) return;
+
+            document.getElementById('modalVideoTitle').innerText = ex.name;
+            document.getElementById('modalVideoSubtitle').innerText = `Standard: ${ex.standard}`;
+            document.getElementById('modalExternalLink').href = url;
+
+            const container = document.getElementById('videoEmbedContainer');
+            const embedUrl = getEmbedUrl(url);
+
+            if (embedUrl.includes('youtube.com/embed/')) {
+                container.innerHTML = `<iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            } else {
+                container.innerHTML = `
+                    <div class="text-center p-6 space-y-3">
+                        <i class="fa-solid fa-video text-4xl text-indigo-400"></i>
+                        <p class="text-xs text-slate-300">Custom link provided. Click below to view externally.</p>
+                        <a href="${url}" target="_blank" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold">Open Link</a>
+                    </div>
+                `;
+            }
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+            document.getElementById('videoEmbedContainer').innerHTML = '';
+        }
+
+        // --- Workout Logger Functions ---
+        function openLogModal() {
+            document.getElementById('sessionDate').valueAsDate = new Date();
+            document.getElementById('modalExerciseRowsContainer').innerHTML = '';
+            addExerciseRowToModal();
+            addExerciseRowToModal();
+            document.getElementById('logModal').classList.remove('hidden');
+        }
+
+        function closeLogModal() {
+            document.getElementById('logModal').classList.add('hidden');
+        }
+
+        function addExerciseRowToModal() {
+            const container = document.getElementById('modalExerciseRowsContainer');
+            const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+
+            let optionsHtml = '';
+            appState.exercises.forEach(ex => {
+                optionsHtml += `<option value="${ex.name}">${ex.name} (${ex.category})</option>`;
+            });
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'flex flex-col md:flex-row gap-2 bg-slate-900/80 p-3 rounded-xl border border-cardBorder items-center';
+            rowDiv.id = rowId;
+            rowDiv.innerHTML = `
+                <div class="w-full md:w-2/5">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Exercise</label>
+                    <select class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent">
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sets x Reps</label>
+                    <input type="text" class="session-ex-reps w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 5 x 5" required>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Weight / Load</label>
+                    <input type="text" class="session-ex-weight w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 25% BW">
+                </div>
+                <div class="w-full md:w-auto flex items-end pt-4 md:pt-0">
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(rowDiv);
+        }
+
+        function handleSaveSession(event) {
+            event.preventDefault();
+            const date = document.getElementById('sessionDate').value;
+            const category = document.getElementById('sessionCategory').value;
+            const notes = document.getElementById('sessionNotes').value.trim();
+
+            const rows = document.querySelectorAll('#modalExerciseRowsContainer > div');
+            if (rows.length === 0) return;
+
+            const exercisesList = [];
+            rows.forEach(r => {
+                const name = r.querySelector('.session-ex-name').value;
+                const reps = r.querySelector('.session-ex-reps').value.trim();
+                const weight = r.querySelector('.session-ex-weight').value.trim() || 'Bodyweight';
+                exercisesList.push({ name, reps, weight });
+            });
+
+            const newSession = {
+                id: 'session-' + Date.now(),
+                date,
+                category,
+                notes: notes || '-',
+                exercises: exercisesList
+            };
+
+            appState.workoutSessions.unshift(newSession);
+            saveAllChanges(true);
+            renderWorkoutSessions();
+            renderCalendar();
+            closeLogModal();
+            document.getElementById('workoutLogForm').reset();
+        }
+
+        function deleteSession(id) {
+            appState.workoutSessions = appState.workoutSessions.filter(s => s.id !== id);
+            saveAllChanges(true);
+            renderWorkoutSessions();
+            renderCalendar();
+        }
+
+        function renderWorkoutSessions() {
+            const container = document.getElementById('sessionLogContainer');
+            const emptyState = document.getElementById('emptyLogState');
+            const filter = document.getElementById('logCategoryFilter').value;
+            container.innerHTML = '';
+
+            const filtered = appState.workoutSessions.filter(s => filter === 'all' || s.category === filter);
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            filtered.forEach(session => {
+                let exercisesHtml = '';
+                session.exercises.forEach(ex => {
+                    exercisesHtml += `
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/70 p-2.5 rounded-xl border border-cardBorder/60 text-xs gap-2">
+                            <span class="font-bold text-white"><i class="fa-solid fa-check text-indigo-400 mr-1.5"></i>${ex.name}</span>
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder">Reps: <strong>${ex.reps}</strong></span>
+                                <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-slate-400">Load: <strong>${ex.weight}</strong></span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/90 border border-cardBorder rounded-2xl p-5 shadow-sm space-y-3';
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-cardBorder gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-600/20">${session.category} Day</span>
+                            <span class="text-xs font-semibold text-slate-300"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>${session.date}</span>
+                        </div>
+                        <button onclick="deleteSession('${session.id}')" class="text-slate-400 hover:text-rose-400 text-xs font-semibold transition-all">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Delete Log
+                        </button>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged Exercises</label>
+                        <div class="space-y-2">${exercisesHtml}</div>
+                    </div>
+                    ${session.notes && session.notes !== '-' ? `
+                        <div class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-cardBorder/60 mt-2">
+                            <strong class="text-slate-400">Notes:</strong> ${session.notes}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- Core Rules & Standards CRUD ---
+        function renderRules() {
+            const container = document.getElementById('rulesListContainer');
+            container.innerHTML = '';
+
+            appState.rules.forEach(rule => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/90 border border-cardBorder rounded-2xl p-5 space-y-2 flex flex-col justify-between shadow-sm';
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-start gap-2">
+                            <h3 class="font-bold text-white text-base flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-amber-500"></i> ${rule.title}
+                            </h3>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openEditRuleModal('${rule.id}')" class="text-slate-400 hover:text-white p-1 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteRule('${rule.id}')" class="text-slate-400 hover:text-rose-400 p-1 rounded-lg text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-cardBorder/60">${rule.desc}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openAddRuleModal() {
+            document.getElementById('ruleModalTitle').innerText = 'Add Core Principle';
+            document.getElementById('editRuleId').value = '';
+            document.getElementById('ruleForm').reset();
+            document.getElementById('ruleModal').classList.remove('hidden');
+        }
+
+        function openEditRuleModal(id) {
+            const r = appState.rules.find(rule => rule.id === id);
+            if (!r) return;
+
+            document.getElementById('ruleModalTitle').innerText = 'Edit Core Principle';
+            document.getElementById('editRuleId').value = r.id;
+            document.getElementById('modalRuleTitle').value = r.title;
+            document.getElementById('modalRuleDesc').value = r.desc;
+            document.getElementById('ruleModal').classList.remove('hidden');
+        }
+
+        function closeRuleModal() {
+            document.getElementById('ruleModal').classList.add('hidden');
+        }
+
+        function handleSaveRule(event) {
+            event.preventDefault();
+            const id = document.getElementById('editRuleId').value;
+            const title = document.getElementById('modalRuleTitle').value.trim();
+            const desc = document.getElementById('modalRuleDesc').value.trim();
+
+            if (id) {
+                const r = appState.rules.find(rule => rule.id === id);
+                if (r) {
+                    r.title = title;
+                    r.desc = desc;
+                }
+            } else {
+                appState.rules.push({ id: 'rule-' + Date.now(), title, desc });
+            }
+
+            saveAllChanges(true);
+            renderRules();
+            closeRuleModal();
+        }
+
+        function deleteRule(id) {
+            appState.rules = appState.rules.filter(r => r.id !== id);
+            saveAllChanges(true);
+            renderRules();
+        }
+
+        // --- Interactive Calendar Functions ---
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            document.getElementById('calendarMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'bg-slate-950/20 rounded-xl border border-slate-900 p-1.5 opacity-20 pointer-events-none min-h-[75px]';
+                grid.appendChild(emptyCell);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(d).padStart(2, '0');
+                const dateStr = `${year}-${monthStr}-${dayStr}`;
+
+                const planned = appState.calendarSchedule[dateStr];
+                const isCompleted = appState.workoutSessions.some(s => s.date === dateStr);
+                const isToday = todayStr === dateStr;
+
+                const cell = document.createElement('div');
+                let borderStyle = isToday ? 'border-amber-500/80 bg-slate-900/90 ring-1 ring-amber-500/50' : 'border-cardBorder bg-slate-900/40';
+                cell.className = `rounded-xl border ${borderStyle} p-2 flex flex-col justify-between hover:border-indigo-500/80 cursor-pointer transition-all min-h-[80px]`;
+                cell.onclick = () => openScheduleModal(dateStr);
+
+                let badgeHtml = '';
+                if (planned) {
+                    const colorMap = {
+                        'Push': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                        'Pull': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                        'Legs': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                        'Core': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                        'Warm-Up': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
+                        'Cardio': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                        'Mobility / Stability': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+                        'Rest': 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                    };
+                    const style = colorMap[planned.category] || 'bg-slate-800 text-slate-300 border-slate-700';
+                    badgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}">${planned.category}</span>`;
+                }
+
+                const checkIcon = isCompleted ? `<span class="text-emerald-400 text-xs" title="Logged Session"><i class="fa-solid fa-circle-check"></i></span>` : '';
+
+                cell.innerHTML = `
+                    <div class="flex justify-between items-center w-full">
+                        <span class="text-xs font-bold ${isToday ? 'text-amber-400' : 'text-slate-300'}">${d}</span>
+                        ${checkIcon}
+                    </div>
+                    <div class="mt-1 flex flex-col gap-1">
+                        ${badgeHtml}
+                        ${planned && planned.notes ? `<p class="text-[9px] text-slate-400 truncate">${planned.notes}</p>` : ''}
+                    </div>
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            currentCalendarDate = new Date();
+            renderCalendar();
+        }
+
+        function openScheduleModal(dateStr) {
+            activeScheduleDateStr = dateStr;
+            document.getElementById('scheduleDateStr').value = dateStr;
+
+            const existing = appState.calendarSchedule[dateStr];
+            if (existing) {
+                document.getElementById('scheduleCategory').value = existing.category;
+                document.getElementById('scheduleNotes').value = existing.notes || '';
+                document.getElementById('deleteScheduleBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('scheduleCategory').value = 'Push';
+                document.getElementById('scheduleNotes').value = '';
+                document.getElementById('deleteScheduleBtn').classList.add('hidden');
+            }
+            document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal').classList.add('hidden');
+        }
+
+        function handleSaveSchedule(event) {
+            event.preventDefault();
+            if (!activeScheduleDateStr) return;
+
+            const category = document.getElementById('scheduleCategory').value;
+            const notes = document.getElementById('scheduleNotes').value.trim();
+
+            appState.calendarSchedule[activeScheduleDateStr] = { category, notes };
+            saveAllChanges(true);
+            renderCalendar();
+            closeScheduleModal();
+        }
+
+        function handleDeleteSchedule() {
+            if (!activeScheduleDateStr) return;
+            delete appState.calendarSchedule[activeScheduleDateStr];
+            saveAllChanges(true);
+            renderCalendar();
+            closeScheduleModal();
+        }
+
+        // --- Export / Import / Reset ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", `ATG_Hybrid_Dashboard_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.exercises) appState.exercises = parsed.exercises;
+                    if (parsed.videoLinks) appState.videoLinks = parsed.videoLinks;
+                    if (parsed.workoutSessions) appState.workoutSessions = parsed.workoutSessions;
+                    if (parsed.rules) appState.rules = parsed.rules;
+                    if (parsed.calendarSchedule) appState.calendarSchedule = parsed.calendarSchedule;
+
+                    saveAllChanges(true);
+                    renderExercises();
+                    renderWorkoutSessions();
+                    renderRules();
+                    renderCalendar();
+                } catch(err) {
+                    alert('Invalid JSON file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function confirmResetDefaults() {
+            localStorage.removeItem(STORAGE_KEY);
+            loadState();
+            renderExercises();
+            renderWorkoutSessions();
+            renderRules();
+            renderCalendar();
+            closeResetModal();
+            triggerToast("Factory default data restored.");
+        }
+    </script>
+</body>
+</html>
