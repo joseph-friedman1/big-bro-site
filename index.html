@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATG & Calisthenics Hybrid Dashboard</title>
+    <title>Friedmans Calisthenics</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -79,7 +79,7 @@
                 <div class="inline-flex bg-indigo-600 p-3 rounded-xl text-white shadow-lg shadow-indigo-600/30 mb-3">
                     <i class="fa-solid fa-dumbbell text-xl"></i>
                 </div>
-                <h1 class="text-xl font-bold text-white">Workout Logbook</h1>
+                <h1 class="text-xl font-bold text-white">Friedmans Calisthenics</h1>
                 <p class="text-sm text-slate-400 mt-1">Sign in to sync your workouts across devices.</p>
             </div>
             <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
@@ -108,8 +108,8 @@
                         <i class="fa-solid fa-dumbbell text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold tracking-tight text-white leading-tight">ATG & Calisthenics Hybrid</h1>
-                        <p class="text-xs text-slate-400">Bulletproofing & Strength Dashboard</p>
+                        <h1 class="text-lg font-bold tracking-tight text-white leading-tight">Friedmans Calisthenics</h1>
+                        <p class="text-xs text-slate-400">Training, progress & rewards</p>
                     </div>
                 </div>
             </div>
@@ -119,6 +119,9 @@
                 <nav id="appNav" class="no-scrollbar flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
                     <button onclick="switchTab('weekly')" id="nav-weekly" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
                         <i class="fa-solid fa-chart-pie mr-1.5"></i>Weekly
+                    </button>
+                    <button onclick="switchTab('skills')" id="nav-skills" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-gamepad mr-1.5"></i>Skills & XP
                     </button>
                     <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
                         <i class="fa-solid fa-list-check mr-1.5"></i>Directory
@@ -141,6 +144,13 @@
                     <button onclick="saveAllChanges()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 active:scale-95">
                         <i class="fa-solid fa-floppy-disk"></i> Save All
                     </button>
+                    <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Download a backup of all app data">
+                        <i class="fa-solid fa-download"></i><span class="hidden sm:inline">Save Backup</span><span class="sm:hidden">Backup</span>
+                    </button>
+                    <label class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1" title="Restore a backup file">
+                        <i class="fa-solid fa-upload"></i><span class="hidden sm:inline">Import</span>
+                        <input type="file" id="importFile" onchange="importData(event)" accept=".json,application/json" class="hidden">
+                    </label>
                     <button onclick="openResetModal()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Reset Defaults">
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
@@ -166,6 +176,70 @@
                 </div>
                 <div id="weeklyProgressContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                     <!-- Weekly progress wheel and daily details -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Skills, XP & Rewards -->
+        <section id="tab-skills" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-indigo-400"></i> Skills & Rewards</h2>
+                        <p class="text-xs text-slate-400 mt-1">Add goals, check them off once you achieve them, earn XP, and spend XP on your own rewards.</p>
+                    </div>
+                    <div class="bg-slate-900 rounded-2xl border border-indigo-500/30 px-5 py-3 text-center min-w-32">
+                        <div id="availableXp" class="text-3xl font-extrabold text-indigo-300">0 XP</div>
+                        <div id="xpEarnedSummary" class="text-[11px] text-slate-400">0 earned · 0 spent</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
+                        <div id="skillsCompletedSummary" class="text-lg font-bold text-white">0 / 0</div>
+                        <div class="text-[11px] text-slate-400">Skills completed</div>
+                    </div>
+                    <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
+                        <div id="rewardsUnlockedSummary" class="text-lg font-bold text-white">0</div>
+                        <div class="text-[11px] text-slate-400">Rewards unlocked</div>
+                    </div>
+                    <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
+                        <div id="nextRewardSummary" class="text-lg font-bold text-white">Add a reward</div>
+                        <div class="text-[11px] text-slate-400">Next reward to unlock</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">My Skills</h3>
+                        <p class="text-xs text-slate-400 mt-1">Examples: first pull-up, longer L-sit, improved mobility goal. You choose the XP.</p>
+                    </div>
+                    <form id="skillForm" onsubmit="handleAddSkill(event)" class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                        <input id="skillName" type="text" maxlength="80" required placeholder="Skill or fitness goal" class="px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <div class="flex gap-2">
+                            <input id="skillXp" type="number" min="1" max="10000" value="25" required aria-label="XP reward for skill" class="w-24 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                            <span class="self-center text-xs text-slate-400">XP</span>
+                            <button type="submit" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                        </div>
+                    </form>
+                    <div id="skillsList" class="space-y-2"></div>
+                </div>
+
+                <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">My Rewards</h3>
+                        <p class="text-xs text-slate-400 mt-1">Add prizes such as a favorite treat or new gear. They stay locked until you have enough XP.</p>
+                    </div>
+                    <form id="rewardForm" onsubmit="handleAddReward(event)" class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                        <input id="rewardName" type="text" maxlength="80" required placeholder="Reward (e.g. Wegmans cheesecake)" class="px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <div class="flex gap-2">
+                            <input id="rewardCost" type="number" min="1" max="1000000" value="100" required aria-label="Reward XP cost" class="w-24 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                            <span class="self-center text-xs text-slate-400">XP</span>
+                            <button type="submit" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                        </div>
+                    </form>
+                    <div id="rewardsList" class="space-y-2"></div>
                 </div>
             </div>
         </section>
@@ -480,6 +554,7 @@
             </div>
             <form onsubmit="handleSaveSchedule(event)" class="space-y-4">
                 <input type="hidden" id="scheduleDateStr">
+                <p id="scheduleDateLabel" class="text-sm font-bold text-indigo-300"></p>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Category / Day Type</label>
                     <select id="scheduleCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
@@ -518,7 +593,7 @@
             </div>
             <div>
                 <h3 class="text-base font-bold text-white">Reset to Default Data?</h3>
-                <p class="text-xs text-slate-400 mt-1">This will erase custom exercises, logged workouts, your warm-up routine, and custom rules, then restore the factory defaults.</p>
+                <p class="text-xs text-slate-400 mt-1">This will erase custom exercises, logged workouts, your warm-up routine, custom rules, skills, rewards, and calendar plans, then restore the factory defaults.</p>
             </div>
             <div class="flex justify-center gap-3 pt-2">
                 <button onclick="closeResetModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
@@ -596,7 +671,9 @@
             workoutSessions: [],
             rules: [],
             calendarSchedule: {},
-            warmupRoutine: DEFAULT_WARMUP_ROUTINE
+            warmupRoutine: DEFAULT_WARMUP_ROUTINE,
+            skills: [],
+            rewards: []
         };
 
         let currentDayFilter = 'all';
@@ -708,6 +785,7 @@
                 renderWeeklyProgress();
                 renderRules();
                 renderWarmupRoutine();
+                renderSkills();
                 renderCalendar();
                 document.getElementById('sessionDate').valueAsDate = new Date();
             } catch (error) {
@@ -745,6 +823,8 @@
             appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                 ? parsed.warmupRoutine
                 : buildWarmupRoutine(appState.exercises);
+            appState.skills = Array.isArray(parsed.skills) ? parsed.skills : [];
+            appState.rewards = Array.isArray(parsed.rewards) ? parsed.rewards : [];
         }
 
         async function loadCloudState(userId) {
@@ -849,6 +929,8 @@
                     appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                         ? parsed.warmupRoutine
                         : buildWarmupRoutine(appState.exercises);
+                    appState.skills = Array.isArray(parsed.skills) ? parsed.skills : [];
+                    appState.rewards = Array.isArray(parsed.rewards) ? parsed.rewards : [];
                     return;
                 } catch(e) {
                     console.error("Error parsing storage state:", e);
@@ -864,6 +946,8 @@
             appState.rules = [...DEFAULT_RULES];
             appState.calendarSchedule = {};
             appState.warmupRoutine = DEFAULT_WARMUP_ROUTINE;
+            appState.skills = [];
+            appState.rewards = [];
             saveAllChanges(false);
         }
 
@@ -887,6 +971,85 @@
             }
         }
 
+        function exportData() {
+            const backup = {
+                app: 'friedmans-calisthenics',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                data: appState
+            };
+            const file = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `friedmans-calisthenics-backup-${formatDateLocal(new Date())}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            triggerToast('Backup downloaded.');
+        }
+
+        async function importData(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                const importedState = parsed && parsed.app === 'friedmans-calisthenics'
+                    ? parsed.data
+                    : parsed && parsed.data && typeof parsed.data === 'object'
+                        ? parsed.data
+                        : parsed;
+                if (!importedState || typeof importedState !== 'object' || Array.isArray(importedState)
+                    || !Array.isArray(importedState.exercises)
+                    || !Array.isArray(importedState.workoutSessions)
+                    || (importedState.rules !== undefined && !Array.isArray(importedState.rules))
+                    || (importedState.skills !== undefined && !Array.isArray(importedState.skills))
+                    || (importedState.rewards !== undefined && !Array.isArray(importedState.rewards))
+                    || (importedState.calendarSchedule !== undefined
+                        && (!importedState.calendarSchedule || typeof importedState.calendarSchedule !== 'object' || Array.isArray(importedState.calendarSchedule)))) {
+                    throw new Error('This file does not contain a valid Friedmans Calisthenics backup.');
+                }
+                if (!confirm('Import this backup and replace the data currently in this account? This cannot be undone.')) return;
+
+                applySavedState(importedState);
+                activeLogDateFilter = null;
+                document.getElementById('logCategoryFilter').value = 'all';
+                renderCategoryFilterButtons();
+                renderExercises();
+                renderWorkoutSessions();
+                renderWeeklyProgress();
+                renderRules();
+                renderWarmupRoutine();
+                renderSkills();
+                renderCalendar();
+                saveAllChanges(false);
+                clearTimeout(cloudSyncTimer);
+                if (currentUser && cloudReady) {
+                    try {
+                        await syncStateToCloud();
+                        triggerToast('Backup imported and synced to your account.');
+                    } catch (error) {
+                        console.error('Backup imported, but cloud sync failed:', error);
+                        updateSyncStatus('error', 'Import saved on device; cloud sync failed');
+                        triggerToast('Backup imported on this device, but cloud sync failed. Retry with Save All.');
+                    }
+                } else {
+                    triggerToast('Backup imported and saved on this device.');
+                }
+            } catch (error) {
+                console.error('Unable to import backup:', error);
+                alert(error instanceof SyntaxError
+                    ? 'That file is not valid JSON. Choose a Friedmans Calisthenics backup file.'
+                    : error.message || 'Could not read this backup file.');
+            } finally {
+                input.value = '';
+            }
+        }
+
         function triggerToast(msg) {
             const toast = document.getElementById('toastNotification');
             document.getElementById('toastMessage').innerText = msg;
@@ -900,7 +1063,7 @@
 
         // Navigation Tab Switcher
         function switchTab(tabId) {
-            ['weekly', 'program', 'tracker', 'calendar', 'rules'].forEach(t => {
+            ['weekly', 'skills', 'program', 'tracker', 'calendar', 'rules'].forEach(t => {
                 const elem = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (elem) elem.classList.add('hidden');
@@ -1214,11 +1377,11 @@
             const summary = document.getElementById('previousWorkoutSummary');
             button.disabled = !previous;
             button.classList.toggle('opacity-50', !previous);
-            button.title = previous ? `Copy exercises from ${previous.date}` : `No previous ${category} session yet`;
+            button.title = previous ? `Copy exercises from ${formatDisplayDate(previous.date)}` : `No previous ${category} session yet`;
             button.innerHTML = `<i class="fa-solid fa-rotate-left mr-1"></i>${previous ? `Use last ${category} workout` : `No previous ${category} workout`}`;
             summary.classList.toggle('hidden', !previous);
             summary.textContent = previous
-                ? `Previous ${category} workout: ${previous.date}. Previous reps/load are shown beside matching exercises below.`
+                ? `Previous ${category} workout: ${formatDisplayDate(previous.date)}. Previous reps/load are shown beside matching exercises below.`
                 : `No previous ${category} workout to compare yet.`;
             document.querySelectorAll('#modalExerciseRowsContainer > div[id^="row-"]').forEach(updatePreviousExerciseHint);
         }
@@ -1237,7 +1400,7 @@
                 return;
             }
             const time = previousExercise.minutes ? ` · ${previousExercise.minutes} min` : '';
-            output.textContent = `Last time (${previous.date}): ${previousExercise.reps || 'no reps'} · ${previousExercise.weight || 'Bodyweight'}${time}`;
+            output.textContent = `Last time (${formatDisplayDate(previous.date)}): ${previousExercise.reps || 'no reps'} · ${previousExercise.weight || 'Bodyweight'}${time}`;
             output.classList.remove('hidden');
         }
 
@@ -1248,7 +1411,7 @@
 
             const hasEnteredValues = [...document.querySelectorAll('#modalExerciseRowsContainer .session-ex-reps')]
                 .some(input => input.value.trim());
-            if (hasEnteredValues && !confirm(`Replace the current exercise rows with your ${previous.date} ${category} workout?`)) return;
+            if (hasEnteredValues && !confirm(`Replace the current exercise rows with your ${formatDisplayDate(previous.date)} ${category} workout?`)) return;
 
             const container = document.getElementById('modalExerciseRowsContainer');
             container.innerHTML = '';
@@ -1346,7 +1509,7 @@
             );
             dateFilterLabel.classList.toggle('hidden', !activeLogDateFilter);
             clearDateFilter.classList.toggle('hidden', !activeLogDateFilter);
-            dateFilterLabel.textContent = activeLogDateFilter ? `Showing sessions from ${activeLogDateFilter}` : '';
+            dateFilterLabel.textContent = activeLogDateFilter ? `Showing sessions from ${formatDisplayDate(activeLogDateFilter)}` : '';
 
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -1375,7 +1538,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-cardBorder gap-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-600/20">${session.category} Day</span>
-                            <span class="text-xs font-semibold text-slate-300"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>${session.date}</span>
+                            <span class="text-xs font-semibold text-slate-300"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>${formatDisplayDate(session.date)}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <button onclick="openEditSessionModal('${session.id}')" class="text-indigo-300 hover:text-indigo-200 text-xs font-semibold transition-all">
@@ -1408,6 +1571,162 @@
         function renderWarmupRoutine() {
             const input = document.getElementById('warmupRoutine');
             if (input) input.value = appState.warmupRoutine || '';
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        function getXpTotals() {
+            const earned = appState.skills.reduce((total, skill) =>
+                total + (skill.completed ? Math.max(0, Number(skill.xp) || 0) : 0), 0);
+            const spent = appState.rewards.reduce((total, reward) =>
+                total + (reward.claimed ? Math.max(0, Number(reward.cost) || 0) : 0), 0);
+            return { earned, spent, available: Math.max(0, earned - spent) };
+        }
+
+        function renderSkills() {
+            if (!document.getElementById('skillsList')) return;
+            const { earned, spent, available } = getXpTotals();
+            const completedCount = appState.skills.filter(skill => skill.completed).length;
+            const claimedCount = appState.rewards.filter(reward => reward.claimed).length;
+            const nextReward = appState.rewards
+                .filter(reward => !reward.claimed)
+                .sort((a, b) => Number(a.cost) - Number(b.cost))[0];
+
+            document.getElementById('availableXp').textContent = `${available} XP`;
+            document.getElementById('xpEarnedSummary').textContent = `${earned} earned · ${spent} spent`;
+            document.getElementById('skillsCompletedSummary').textContent = `${completedCount} / ${appState.skills.length}`;
+            document.getElementById('rewardsUnlockedSummary').textContent = String(claimedCount);
+            document.getElementById('nextRewardSummary').textContent = nextReward
+                ? `${nextReward.name} · ${nextReward.cost} XP`
+                : 'Add a reward';
+
+            const skillsList = document.getElementById('skillsList');
+            skillsList.innerHTML = appState.skills.length
+                ? appState.skills.map(skill => `
+                    <div class="flex items-center justify-between gap-3 bg-slate-900/70 border border-cardBorder rounded-xl p-3">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold ${skill.completed ? 'text-emerald-300 line-through' : 'text-white'}">${escapeHtml(skill.name)}</p>
+                            <p class="text-[11px] text-indigo-300">${Math.max(0, Number(skill.xp) || 0)} XP ${skill.completed ? '· completed' : '· ready to earn'}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            ${skill.completed
+                                ? '<span class="text-xs text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Done</span>'
+                                : `<button type="button" data-complete-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold text-white">Complete</button>
+                                   <button type="button" data-delete-skill="${escapeHtml(skill.id)}" aria-label="Delete ${escapeHtml(skill.name)}" class="p-2 text-slate-400 hover:text-rose-300"><i class="fa-solid fa-trash-can"></i></button>`}
+                        </div>
+                    </div>
+                `).join('')
+                : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add a skill or goal above to start earning XP.</p>';
+
+            const rewardsList = document.getElementById('rewardsList');
+            rewardsList.innerHTML = appState.rewards.length
+                ? appState.rewards.map(reward => {
+                    const isAffordable = available >= Number(reward.cost);
+                    return `
+                        <div class="flex items-center justify-between gap-3 bg-slate-900/70 border ${reward.claimed ? 'border-emerald-800/60' : 'border-cardBorder'} rounded-xl p-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold ${reward.claimed ? 'text-emerald-300' : 'text-white'}">${escapeHtml(reward.name)}</p>
+                                <p class="text-[11px] ${reward.claimed ? 'text-emerald-400' : 'text-amber-300'}">${reward.cost} XP · ${reward.claimed ? 'unlocked' : isAffordable ? 'ready to unlock' : `${Number(reward.cost) - available} XP to go`}</p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                ${reward.claimed
+                                    ? '<span class="text-xs text-emerald-300"><i class="fa-solid fa-unlock mr-1"></i>Unlocked</span>'
+                                    : `<button type="button" data-claim-reward="${escapeHtml(reward.id)}" ${isAffordable ? '' : 'disabled'} class="px-3 py-2 ${isAffordable ? 'bg-amber-600 hover:bg-amber-500' : 'bg-slate-700 opacity-60 cursor-not-allowed'} rounded-lg text-xs font-bold text-white">Unlock</button>
+                                       <button type="button" data-delete-reward="${escapeHtml(reward.id)}" aria-label="Delete ${escapeHtml(reward.name)}" class="p-2 text-slate-400 hover:text-rose-300"><i class="fa-solid fa-trash-can"></i></button>`}
+                            </div>
+                        </div>
+                    `;
+                }).join('')
+                : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add a reward you would like to earn. It stays locked until you have enough XP.</p>';
+
+            skillsList.querySelectorAll('[data-complete-skill]').forEach(button => {
+                button.addEventListener('click', () => completeSkill(button.dataset.completeSkill));
+            });
+            skillsList.querySelectorAll('[data-delete-skill]').forEach(button => {
+                button.addEventListener('click', () => deleteSkill(button.dataset.deleteSkill));
+            });
+            rewardsList.querySelectorAll('[data-claim-reward]').forEach(button => {
+                button.addEventListener('click', () => claimReward(button.dataset.claimReward));
+            });
+            rewardsList.querySelectorAll('[data-delete-reward]').forEach(button => {
+                button.addEventListener('click', () => deleteReward(button.dataset.deleteReward));
+            });
+        }
+
+        function handleAddSkill(event) {
+            event.preventDefault();
+            const name = document.getElementById('skillName').value.trim();
+            const xp = Number(document.getElementById('skillXp').value);
+            if (!name || !Number.isInteger(xp) || xp < 1 || xp > 10000) {
+                triggerToast('Enter a skill name and an XP amount from 1 to 10,000.');
+                return;
+            }
+            appState.skills.push({ id: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, xp, completed: false });
+            document.getElementById('skillForm').reset();
+            document.getElementById('skillXp').value = '25';
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function completeSkill(id) {
+            const skill = appState.skills.find(item => item.id === id);
+            if (!skill || skill.completed) return;
+            skill.completed = true;
+            skill.completedAt = new Date().toISOString();
+            saveAllChanges(false);
+            renderSkills();
+            triggerToast(`Skill complete! You earned ${skill.xp} XP.`);
+        }
+
+        function deleteSkill(id) {
+            const skill = appState.skills.find(item => item.id === id);
+            if (!skill || skill.completed) return;
+            appState.skills = appState.skills.filter(item => item.id !== id);
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function handleAddReward(event) {
+            event.preventDefault();
+            const name = document.getElementById('rewardName').value.trim();
+            const cost = Number(document.getElementById('rewardCost').value);
+            if (!name || !Number.isInteger(cost) || cost < 1 || cost > 1000000) {
+                triggerToast('Enter a reward name and an XP cost from 1 to 1,000,000.');
+                return;
+            }
+            appState.rewards.push({ id: `reward-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, cost, claimed: false });
+            document.getElementById('rewardForm').reset();
+            document.getElementById('rewardCost').value = '100';
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function claimReward(id) {
+            const reward = appState.rewards.find(item => item.id === id);
+            const { available } = getXpTotals();
+            if (!reward || reward.claimed || available < Number(reward.cost)) return;
+            if (!confirm(`Unlock "${reward.name}" for ${reward.cost} XP?`)) return;
+            reward.claimed = true;
+            reward.claimedAt = new Date().toISOString();
+            saveAllChanges(false);
+            renderSkills();
+            triggerToast(`Reward unlocked: ${reward.name}`);
+        }
+
+        function deleteReward(id) {
+            const reward = appState.rewards.find(item => item.id === id);
+            if (!reward || reward.claimed) return;
+            appState.rewards = appState.rewards.filter(item => item.id !== id);
+            saveAllChanges(false);
+            renderSkills();
         }
 
         function handleWarmupRoutineInput(value) {
@@ -1502,6 +1821,11 @@
             return `${year}-${month}-${day}`;
         }
 
+        function formatDisplayDate(dateString) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString || '');
+            return match ? `${match[2]}/${match[3]}/${match[1]}` : dateString || '';
+        }
+
         function renderWeeklyProgress() {
             const container = document.getElementById('weeklyProgressContainer');
             if (!container) return;
@@ -1540,7 +1864,7 @@
                 const categories = [...new Set(sessions.map(session => session.category))].join(', ');
                 return `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-cardBorder/70 last:border-0">
-                        <button type="button" data-week-day="${index}" class="text-left text-xs font-semibold ${sessions.length ? 'text-white hover:text-indigo-300' : 'text-slate-500 hover:text-slate-300'}">${weekday} · ${weekDates[index]}</button>
+                        <button type="button" data-week-day="${index}" class="text-left text-xs font-semibold ${sessions.length ? 'text-white hover:text-indigo-300' : 'text-slate-500 hover:text-slate-300'}">${weekday} · ${formatDisplayDate(weekDates[index])}</button>
                         <div class="flex flex-wrap justify-end gap-1">
                             ${sessions.length
                                 ? sessions.map((session, sessionIndex) => `<button type="button" data-week-session="${index}:${sessionIndex}" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/60 border border-indigo-800/60 rounded-lg px-2 py-1">${session.category}</button>`).join('')
@@ -1559,10 +1883,10 @@
                             <span class="text-[11px] text-indigo-300 mt-1">${eligibleSessions.length} workout${eligibleSessions.length === 1 ? '' : 's'}</span>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-400">${weekDates[0]} – ${weekDates[6]}</p>
+                    <p class="text-xs text-slate-400">${formatDisplayDate(weekDates[0])} – ${formatDisplayDate(weekDates[6])}</p>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white mb-2">This week <span class="font-normal text-slate-400">(${formatDateLocal(weekStart)} – ${formatDateLocal(weekEnd)})</span></h3>
+                    <h3 class="text-sm font-bold text-white mb-2">This week <span class="font-normal text-slate-400">(${formatDisplayDate(formatDateLocal(weekStart))} – ${formatDisplayDate(formatDateLocal(weekEnd))})</span></h3>
                     <div>${dailyDetails}</div>
                 </div>
             `;
@@ -1674,6 +1998,7 @@
         function openScheduleModal(dateStr) {
             activeScheduleDateStr = dateStr;
             document.getElementById('scheduleDateStr').value = dateStr;
+            document.getElementById('scheduleDateLabel').textContent = formatDisplayDate(dateStr);
 
             const existing = appState.calendarSchedule[dateStr];
             if (existing) {
@@ -1725,10 +2050,15 @@
         function confirmResetDefaults() {
             localStorage.removeItem(STORAGE_KEY);
             loadState();
+            activeLogDateFilter = null;
+            document.getElementById('logCategoryFilter').value = 'all';
+            renderWeeklyProgress();
             renderExercises();
             renderWorkoutSessions();
+            renderWeeklyProgress();
             renderRules();
             renderWarmupRoutine();
+            renderSkills();
             renderCalendar();
             closeResetModal();
             triggerToast("Factory default data restored.");
