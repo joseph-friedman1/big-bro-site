@@ -31,6 +31,39 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (max-width: 767px) {
+            body { padding-bottom: 5rem; }
+            #appNav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 45;
+                width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                border-radius: 0;
+                padding: 0.4rem;
+            }
+            #appNav button {
+                display: flex;
+                flex: 1 0 auto;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.2rem;
+                min-width: 4.25rem;
+                min-height: 2.75rem;
+                padding: 0.5rem 0.4rem;
+                font-size: 0.65rem;
+                white-space: nowrap;
+            }
+            #appNav button i { margin-right: 0 !important; }
+            #headerActions { justify-content: center; }
+            #syncStatus { order: -1; width: 100%; text-align: center; }
+            #appMain { padding-top: 1rem; }
+            #logModal > div { padding: 1rem; }
+            #modalExerciseRowsContainer > div { align-items: stretch; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white pb-12">
@@ -83,7 +116,7 @@
 
             <!-- Navigation Tabs & Actions -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
-                <nav class="flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
+                <nav id="appNav" class="no-scrollbar flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
                     <button onclick="switchTab('weekly')" id="nav-weekly" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
                         <i class="fa-solid fa-chart-pie mr-1.5"></i>Weekly
                     </button>
@@ -102,7 +135,8 @@
                 </nav>
 
                 <!-- Data Controls & Master Save -->
-                <div class="flex items-center gap-1.5">
+                <div id="headerActions" class="flex flex-wrap items-center gap-1.5">
+                    <span id="syncStatus" role="status" aria-live="polite" class="text-[11px] text-slate-400 px-1">Connecting...</span>
                     <span id="signedInEmail" class="hidden md:inline text-[11px] text-slate-400 px-1"></span>
                     <button onclick="saveAllChanges()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 active:scale-95">
                         <i class="fa-solid fa-floppy-disk"></i> Save All
@@ -201,7 +235,11 @@
                         <option value="Cardio">Cardio</option>
                         <option value="Mobility / Stability">Mobility / Stability</option>
                     </select>
+                    <button id="clearLogDateFilter" type="button" onclick="openLogbookFilter('all', null)" class="hidden w-full sm:w-auto px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold">
+                        Clear date filter
+                    </button>
                 </div>
+                <p id="activeLogFilterLabel" class="hidden text-xs text-indigo-300"></p>
 
                 <!-- Session Log Container -->
                 <div id="sessionLogContainer" class="space-y-4">
@@ -369,10 +407,16 @@
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Exercises Performed</label>
-                        <button type="button" onclick="addExerciseRowToModal()" class="text-indigo-400 hover:text-indigo-300 text-xs font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-plus"></i> Add Row
-                        </button>
+                        <div class="flex flex-wrap justify-end gap-3">
+                            <button id="repeatPreviousWorkoutButton" type="button" onclick="copyPreviousWorkoutToForm()" class="text-emerald-300 hover:text-emerald-200 text-xs font-semibold">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Use last workout
+                            </button>
+                            <button type="button" onclick="addExerciseRowToModal()" class="text-indigo-400 hover:text-indigo-300 text-xs font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Add Row
+                            </button>
+                        </div>
                     </div>
+                    <p id="previousWorkoutSummary" class="hidden text-xs text-slate-400"></p>
                     <div id="modalExerciseRowsContainer" class="space-y-3">
                         <!-- Dynamic Exercise Entry Rows -->
                     </div>
@@ -546,11 +590,24 @@
         let cloudSyncTimer = null;
         let cloudSyncChain = Promise.resolve();
         let authMode = 'signin';
+        let activeLogDateFilter = null;
 
         // Initialize Application State
         window.onload = function() {
+            document.getElementById('sessionCategory').addEventListener('change', refreshPreviousWorkoutHints);
+            document.getElementById('sessionDate').addEventListener('change', refreshPreviousWorkoutHints);
             initializeAuth();
         };
+
+        window.addEventListener('offline', () => {
+            if (currentUser && cloudReady) updateSyncStatus('offline', 'Offline - saved on this device');
+        });
+        window.addEventListener('online', () => {
+            if (currentUser && cloudReady) syncStateToCloud().catch(error => {
+                console.error('Cloud sync retry failed:', error);
+                updateSyncStatus('error', 'Sync failed - retry with Save All');
+            });
+        });
 
         async function initializeAuth() {
             try {
@@ -617,6 +674,7 @@
             try {
                 await loadCloudState(user.id);
                 cloudReady = true;
+                updateSyncStatus('synced', 'Cloud data is up to date');
                 document.getElementById('authScreen').classList.add('hidden');
                 document.getElementById('appHeader').classList.remove('hidden');
                 document.getElementById('appMain').classList.remove('hidden');
@@ -691,11 +749,35 @@
             if (error) throw error;
         }
 
+        function updateSyncStatus(state, message) {
+            const element = document.getElementById('syncStatus');
+            if (!element) return;
+            const styles = {
+                synced: 'text-emerald-300',
+                syncing: 'text-amber-300',
+                local: 'text-slate-400',
+                offline: 'text-amber-300',
+                error: 'text-rose-300'
+            };
+            const icons = {
+                synced: 'fa-cloud-check',
+                syncing: 'fa-rotate fa-spin',
+                local: 'fa-floppy-disk',
+                offline: 'fa-wifi',
+                error: 'fa-triangle-exclamation'
+            };
+            element.className = `text-[11px] px-1 ${styles[state] || styles.local}`;
+            element.innerHTML = `<i class="fa-solid ${icons[state] || icons.local} mr-1"></i>${message}`;
+            element.title = message;
+        }
+
         function scheduleCloudSave() {
             clearTimeout(cloudSyncTimer);
+            updateSyncStatus(navigator.onLine ? 'syncing' : 'offline', navigator.onLine ? 'Waiting to sync...' : 'Offline - saved on this device');
             cloudSyncTimer = setTimeout(() => {
                 syncStateToCloud().catch(error => {
                     console.error('Cloud sync failed:', error);
+                    updateSyncStatus(navigator.onLine ? 'error' : 'offline', navigator.onLine ? 'Sync failed - retry with Save All' : 'Offline - saved on this device');
                     triggerToast('Saved on this device, but cloud sync failed. Try Save All again.');
                 });
             }, 500);
@@ -706,8 +788,13 @@
             const userId = currentUser.id;
             const pendingSave = cloudSyncChain.catch(() => {}).then(async () => {
                 if (!currentUser || currentUser.id !== userId) return;
+                if (!navigator.onLine) {
+                    updateSyncStatus('offline', 'Offline - saved on this device');
+                    return;
+                }
+                updateSyncStatus('syncing', 'Syncing to your account...');
                 await writeCloudState(userId);
-                triggerToast('Workout data synced to your account.');
+                updateSyncStatus('synced', `Synced at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
             });
             cloudSyncChain = pendingSave;
             return pendingSave;
@@ -746,10 +833,15 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
             } catch (error) {
                 console.error('Unable to save data in this browser:', error);
+                updateSyncStatus('error', 'Device save failed');
                 triggerToast('Could not save data on this device.');
                 return;
             }
-            if (currentUser && cloudReady) scheduleCloudSave();
+            if (currentUser && cloudReady) {
+                scheduleCloudSave();
+            } else {
+                updateSyncStatus('local', 'Saved on this device only');
+            }
             if (showToast) {
                 triggerToast(currentUser ? "Saved on this device; syncing to your account..." : "Saved on this device.");
             }
@@ -997,6 +1089,7 @@
             document.getElementById('modalExerciseRowsContainer').innerHTML = '';
             addExerciseRowToModal();
             addExerciseRowToModal();
+            refreshPreviousWorkoutHints();
             document.getElementById('logModal').classList.remove('hidden');
         }
 
@@ -1036,12 +1129,17 @@
                     <input type="number" min="0" step="1" class="session-ex-minutes w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="Cardio">
                 </div>
                 <div class="w-full md:w-auto flex items-end pt-4 md:pt-0">
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all">
+                    <button type="button" onclick="document.getElementById('${rowId}').nextElementSibling.remove(); document.getElementById('${rowId}').remove()" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all">
                         <i class="fa-solid fa-trash-can text-xs"></i>
                     </button>
                 </div>
             `;
             container.appendChild(rowDiv);
+            const comparison = document.createElement('p');
+            comparison.id = `${rowId}-previous`;
+            comparison.className = 'hidden text-[10px] text-slate-400 px-1 -mt-1';
+            container.appendChild(comparison);
+            rowDiv.querySelector('.session-ex-name').addEventListener('change', () => updatePreviousExerciseHint(rowDiv));
             if (exercise) {
                 const nameSelect = rowDiv.querySelector('.session-ex-name');
                 if (![...nameSelect.options].some(option => option.value === exercise.name)) {
@@ -1055,6 +1153,67 @@
                 rowDiv.querySelector('.session-ex-weight').value = exercise.weight || '';
                 rowDiv.querySelector('.session-ex-minutes').value = exercise.minutes || '';
             }
+            updatePreviousExerciseHint(rowDiv);
+        }
+
+        function getPreviousWorkout(category, excludeId = '') {
+            const referenceDate = document.getElementById('sessionDate').value;
+            return appState.workoutSessions
+                .filter(session => session.category === category
+                    && session.id !== excludeId
+                    && (!referenceDate || session.date <= referenceDate))
+                .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || String(b.id).localeCompare(String(a.id)))[0] || null;
+        }
+
+        function refreshPreviousWorkoutHints() {
+            const category = document.getElementById('sessionCategory').value;
+            const excludeId = document.getElementById('editSessionId').value;
+            const previous = getPreviousWorkout(category, excludeId);
+            const button = document.getElementById('repeatPreviousWorkoutButton');
+            const summary = document.getElementById('previousWorkoutSummary');
+            button.disabled = !previous;
+            button.classList.toggle('opacity-50', !previous);
+            button.title = previous ? `Copy exercises from ${previous.date}` : `No previous ${category} session yet`;
+            button.innerHTML = `<i class="fa-solid fa-rotate-left mr-1"></i>${previous ? `Use last ${category} workout` : `No previous ${category} workout`}`;
+            summary.classList.toggle('hidden', !previous);
+            summary.textContent = previous
+                ? `Previous ${category} workout: ${previous.date}. Previous reps/load are shown beside matching exercises below.`
+                : `No previous ${category} workout to compare yet.`;
+            document.querySelectorAll('#modalExerciseRowsContainer > div[id^="row-"]').forEach(updatePreviousExerciseHint);
+        }
+
+        function updatePreviousExerciseHint(row) {
+            const output = document.getElementById(`${row.id}-previous`);
+            if (!output) return;
+            const category = document.getElementById('sessionCategory').value;
+            const excludeId = document.getElementById('editSessionId').value;
+            const previous = getPreviousWorkout(category, excludeId);
+            const exerciseName = row.querySelector('.session-ex-name').value;
+            const previousExercise = previous && (previous.exercises || []).find(exercise => exercise.name === exerciseName);
+            if (!previousExercise) {
+                output.classList.add('hidden');
+                output.textContent = '';
+                return;
+            }
+            const time = previousExercise.minutes ? ` · ${previousExercise.minutes} min` : '';
+            output.textContent = `Last time (${previous.date}): ${previousExercise.reps || 'no reps'} · ${previousExercise.weight || 'Bodyweight'}${time}`;
+            output.classList.remove('hidden');
+        }
+
+        function copyPreviousWorkoutToForm() {
+            const category = document.getElementById('sessionCategory').value;
+            const previous = getPreviousWorkout(category, document.getElementById('editSessionId').value);
+            if (!previous) return;
+
+            const hasEnteredValues = [...document.querySelectorAll('#modalExerciseRowsContainer .session-ex-reps')]
+                .some(input => input.value.trim());
+            if (hasEnteredValues && !confirm(`Replace the current exercise rows with your ${previous.date} ${category} workout?`)) return;
+
+            const container = document.getElementById('modalExerciseRowsContainer');
+            container.innerHTML = '';
+            (previous.exercises || []).forEach(exercise => addExerciseRowToModal(exercise));
+            if (!previous.exercises || previous.exercises.length === 0) addExerciseRowToModal();
+            refreshPreviousWorkoutHints();
         }
 
         function handleSaveSession(event) {
@@ -1120,6 +1279,7 @@
             document.getElementById('modalExerciseRowsContainer').innerHTML = '';
             (session.exercises || []).forEach(exercise => addExerciseRowToModal(exercise));
             if (!session.exercises || session.exercises.length === 0) addExerciseRowToModal();
+            refreshPreviousWorkoutHints();
             document.getElementById('logModal').classList.remove('hidden');
         }
 
@@ -1135,9 +1295,17 @@
             const container = document.getElementById('sessionLogContainer');
             const emptyState = document.getElementById('emptyLogState');
             const filter = document.getElementById('logCategoryFilter').value;
+            const dateFilterLabel = document.getElementById('activeLogFilterLabel');
+            const clearDateFilter = document.getElementById('clearLogDateFilter');
             container.innerHTML = '';
 
-            const filtered = appState.workoutSessions.filter(s => filter === 'all' || s.category === filter);
+            const filtered = appState.workoutSessions.filter(session =>
+                (filter === 'all' || session.category === filter)
+                && (!activeLogDateFilter || session.date === activeLogDateFilter)
+            );
+            dateFilterLabel.classList.toggle('hidden', !activeLogDateFilter);
+            clearDateFilter.classList.toggle('hidden', !activeLogDateFilter);
+            dateFilterLabel.textContent = activeLogDateFilter ? `Showing sessions from ${activeLogDateFilter}` : '';
 
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -1314,9 +1482,13 @@
                 const sessions = sessionsByDay[index];
                 const categories = [...new Set(sessions.map(session => session.category))].join(', ');
                 return `
-                    <div class="flex items-center justify-between gap-3 py-2 border-b border-cardBorder/70 last:border-0">
-                        <span class="text-xs font-semibold ${sessions.length ? 'text-white' : 'text-slate-500'}">${weekday}</span>
-                        <span class="text-xs text-right ${sessions.length ? 'text-indigo-300' : 'text-slate-500'}">${sessions.length ? categories : 'No workout logged'}</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-cardBorder/70 last:border-0">
+                        <button type="button" data-week-day="${index}" class="text-left text-xs font-semibold ${sessions.length ? 'text-white hover:text-indigo-300' : 'text-slate-500 hover:text-slate-300'}">${weekday} · ${weekDates[index]}</button>
+                        <div class="flex flex-wrap justify-end gap-1">
+                            ${sessions.length
+                                ? sessions.map((session, sessionIndex) => `<button type="button" data-week-session="${index}:${sessionIndex}" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/60 border border-indigo-800/60 rounded-lg px-2 py-1">${session.category}</button>`).join('')
+                                : '<span class="text-xs text-slate-500">No workout logged</span>'}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1337,6 +1509,24 @@
                     <div>${dailyDetails}</div>
                 </div>
             `;
+
+            container.querySelectorAll('[data-week-day]').forEach(button => {
+                button.addEventListener('click', () => openLogbookFilter('all', weekDates[Number(button.dataset.weekDay)]));
+            });
+            container.querySelectorAll('[data-week-session]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const [dayIndex, sessionIndex] = button.dataset.weekSession.split(':').map(Number);
+                    const session = sessionsByDay[dayIndex][sessionIndex];
+                    openLogbookFilter(session.category, session.date);
+                });
+            });
+        }
+
+        function openLogbookFilter(category, date) {
+            activeLogDateFilter = date;
+            document.getElementById('logCategoryFilter').value = category;
+            switchTab('tracker');
+            renderWorkoutSessions();
         }
 
         // --- Interactive Calendar Functions ---
