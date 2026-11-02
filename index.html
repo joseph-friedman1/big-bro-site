@@ -40,7 +40,6 @@
         <i class="fa-solid fa-circle-check text-lg"></i>
         <span id="toastMessage">All changes saved successfully!</span>
     </div>
-
     <section id="authScreen" class="min-h-screen flex items-center justify-center px-4 py-10">
         <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-md w-full p-7 shadow-2xl space-y-5">
             <div class="text-center">
@@ -85,6 +84,9 @@
             <!-- Navigation Tabs & Actions -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
                 <nav class="flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
+                    <button onclick="switchTab('weekly')" id="nav-weekly" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-chart-pie mr-1.5"></i>Weekly
+                    </button>
                     <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
                         <i class="fa-solid fa-list-check mr-1.5"></i>Directory
                     </button>
@@ -125,6 +127,21 @@
 
     <!-- Main Content Container -->
     <main id="appMain" class="hidden flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- TAB: Weekly Progress -->
+        <section id="tab-weekly" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-accent"></i> Weekly Workout Progress
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Each slice is a weekday with a logged workout. Warm-ups and rest days do not count.</p>
+                </div>
+                <div id="weeklyProgressContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <!-- Weekly progress wheel and daily details -->
+                </div>
+            </div>
+        </section>
 
         <!-- TAB 1: Exercise Directory & Video Library -->
         <section id="tab-program" class="space-y-6">
@@ -318,12 +335,13 @@
     <div id="logModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-cardBg border border-cardBorder rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-cardBorder pb-3">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <h3 id="logModalTitle" class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square text-accent"></i> Log Training Session
                 </h3>
                 <button onclick="closeLogModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="workoutLogForm" onsubmit="handleSaveSession(event)" class="space-y-4">
+                <input type="hidden" id="editSessionId">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
@@ -343,6 +361,11 @@
                     </div>
                 </div>
 
+                <div>
+                    <label for="sessionMinutes" class="block text-xs font-semibold text-slate-400 uppercase mb-1">Session Time (minutes)</label>
+                    <input type="number" id="sessionMinutes" min="0" step="1" placeholder="Optional" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Exercises Performed</label>
@@ -360,9 +383,14 @@
                     <textarea id="sessionNotes" rows="2" placeholder="Energy levels, form notes, tempo details..." class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
                 </div>
 
+                <div class="border-t border-cardBorder pt-3">
+                    <label for="sessionTotalReps" class="block text-xs font-semibold text-slate-400 uppercase mb-1">Total Reps for Session (manual)</label>
+                    <input type="text" id="sessionTotalReps" placeholder="Enter your session total" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+
                 <div class="flex justify-end gap-2 pt-3 border-t border-cardBorder">
                     <button type="button" onclick="closeLogModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-accent hover:bg-accentHover text-white rounded-xl text-xs font-bold shadow-md shadow-accent/20">Save Session Log</button>
+                    <button id="saveSessionButton" type="submit" class="px-5 py-2 bg-accent hover:bg-accentHover text-white rounded-xl text-xs font-bold shadow-md shadow-accent/20">Save Session Log</button>
                 </div>
             </form>
         </div>
@@ -596,6 +624,7 @@
                 renderCategoryFilterButtons();
                 renderExercises();
                 renderWorkoutSessions();
+                renderWeeklyProgress();
                 renderRules();
                 renderCalendar();
                 document.getElementById('sessionDate').valueAsDate = new Date();
@@ -739,7 +768,7 @@
 
         // Navigation Tab Switcher
         function switchTab(tabId) {
-            ['program', 'tracker', 'calendar', 'rules'].forEach(t => {
+            ['weekly', 'program', 'tracker', 'calendar', 'rules'].forEach(t => {
                 const elem = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (elem) elem.classList.add('hidden');
@@ -960,6 +989,10 @@
 
         // --- Workout Logger Functions ---
         function openLogModal() {
+            document.getElementById('workoutLogForm').reset();
+            document.getElementById('editSessionId').value = '';
+            document.getElementById('logModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-accent"></i> Log Training Session';
+            document.getElementById('saveSessionButton').textContent = 'Save Session Log';
             document.getElementById('sessionDate').valueAsDate = new Date();
             document.getElementById('modalExerciseRowsContainer').innerHTML = '';
             addExerciseRowToModal();
@@ -971,7 +1004,7 @@
             document.getElementById('logModal').classList.add('hidden');
         }
 
-        function addExerciseRowToModal() {
+        function addExerciseRowToModal(exercise = null) {
             const container = document.getElementById('modalExerciseRowsContainer');
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
 
@@ -984,19 +1017,23 @@
             rowDiv.className = 'flex flex-col md:flex-row gap-2 bg-slate-900/80 p-3 rounded-xl border border-cardBorder items-center';
             rowDiv.id = rowId;
             rowDiv.innerHTML = `
-                <div class="w-full md:w-2/5">
+                <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Exercise</label>
                     <select class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent">
                         ${optionsHtml}
                     </select>
                 </div>
-                <div class="w-full md:w-1/4">
+                <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sets x Reps</label>
                     <input type="text" class="session-ex-reps w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 5 x 5" required>
                 </div>
-                <div class="w-full md:w-1/4">
+                <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Weight / Load</label>
                     <input type="text" class="session-ex-weight w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 25% BW">
+                </div>
+                <div class="w-full md:w-24">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Time (min)</label>
+                    <input type="number" min="0" step="1" class="session-ex-minutes w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="Cardio">
                 </div>
                 <div class="w-full md:w-auto flex items-end pt-4 md:pt-0">
                     <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all">
@@ -1005,45 +1042,92 @@
                 </div>
             `;
             container.appendChild(rowDiv);
+            if (exercise) {
+                const nameSelect = rowDiv.querySelector('.session-ex-name');
+                if (![...nameSelect.options].some(option => option.value === exercise.name)) {
+                    const option = document.createElement('option');
+                    option.value = exercise.name;
+                    option.textContent = exercise.name;
+                    nameSelect.appendChild(option);
+                }
+                nameSelect.value = exercise.name;
+                rowDiv.querySelector('.session-ex-reps').value = exercise.reps || '';
+                rowDiv.querySelector('.session-ex-weight').value = exercise.weight || '';
+                rowDiv.querySelector('.session-ex-minutes').value = exercise.minutes || '';
+            }
         }
 
         function handleSaveSession(event) {
             event.preventDefault();
+            const editingId = document.getElementById('editSessionId').value;
             const date = document.getElementById('sessionDate').value;
             const category = document.getElementById('sessionCategory').value;
             const notes = document.getElementById('sessionNotes').value.trim();
+            const minutesValue = document.getElementById('sessionMinutes').value;
+            const totalReps = document.getElementById('sessionTotalReps').value.trim();
 
             const rows = document.querySelectorAll('#modalExerciseRowsContainer > div');
-            if (rows.length === 0) return;
+            if (rows.length === 0) {
+                triggerToast('Add at least one exercise before saving.');
+                return;
+            }
 
             const exercisesList = [];
             rows.forEach(r => {
                 const name = r.querySelector('.session-ex-name').value;
                 const reps = r.querySelector('.session-ex-reps').value.trim();
                 const weight = r.querySelector('.session-ex-weight').value.trim() || 'Bodyweight';
-                exercisesList.push({ name, reps, weight });
+                const exerciseMinutes = r.querySelector('.session-ex-minutes').value;
+                exercisesList.push({ name, reps, weight, minutes: exerciseMinutes ? Number(exerciseMinutes) : null });
             });
 
-            const newSession = {
-                id: 'session-' + Date.now(),
+            const savedSession = {
+                id: editingId || 'session-' + Date.now(),
                 date,
                 category,
                 notes: notes || '-',
+                minutes: minutesValue ? Number(minutesValue) : null,
+                totalReps,
                 exercises: exercisesList
             };
 
-            appState.workoutSessions.unshift(newSession);
+            const existingIndex = appState.workoutSessions.findIndex(session => session.id === editingId);
+            if (existingIndex >= 0) {
+                appState.workoutSessions[existingIndex] = savedSession;
+            } else {
+                appState.workoutSessions.unshift(savedSession);
+            }
             saveAllChanges(true);
             renderWorkoutSessions();
+            renderWeeklyProgress();
             renderCalendar();
             closeLogModal();
+        }
+
+        function openEditSessionModal(id) {
+            const session = appState.workoutSessions.find(item => item.id === id);
+            if (!session) return;
+
             document.getElementById('workoutLogForm').reset();
+            document.getElementById('editSessionId').value = session.id;
+            document.getElementById('sessionDate').value = session.date || '';
+            document.getElementById('sessionCategory').value = session.category || 'Push';
+            document.getElementById('sessionMinutes').value = session.minutes || '';
+            document.getElementById('sessionTotalReps').value = session.totalReps || '';
+            document.getElementById('sessionNotes').value = session.notes === '-' ? '' : (session.notes || '');
+            document.getElementById('logModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-accent"></i> Edit Training Session';
+            document.getElementById('saveSessionButton').textContent = 'Update Session';
+            document.getElementById('modalExerciseRowsContainer').innerHTML = '';
+            (session.exercises || []).forEach(exercise => addExerciseRowToModal(exercise));
+            if (!session.exercises || session.exercises.length === 0) addExerciseRowToModal();
+            document.getElementById('logModal').classList.remove('hidden');
         }
 
         function deleteSession(id) {
             appState.workoutSessions = appState.workoutSessions.filter(s => s.id !== id);
             saveAllChanges(true);
             renderWorkoutSessions();
+            renderWeeklyProgress();
             renderCalendar();
         }
 
@@ -1063,13 +1147,14 @@
             emptyState.classList.add('hidden');
             filtered.forEach(session => {
                 let exercisesHtml = '';
-                session.exercises.forEach(ex => {
+                (session.exercises || []).forEach(ex => {
                     exercisesHtml += `
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/70 p-2.5 rounded-xl border border-cardBorder/60 text-xs gap-2">
                             <span class="font-bold text-white"><i class="fa-solid fa-check text-indigo-400 mr-1.5"></i>${ex.name}</span>
                             <div class="flex items-center gap-2 text-slate-300">
                                 <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder">Reps: <strong>${ex.reps}</strong></span>
                                 <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-slate-400">Load: <strong>${ex.weight}</strong></span>
+                                ${ex.minutes ? `<span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-cyan-300">Time: <strong>${ex.minutes} min</strong></span>` : ''}
                             </div>
                         </div>
                     `;
@@ -1083,9 +1168,18 @@
                             <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-600/20">${session.category} Day</span>
                             <span class="text-xs font-semibold text-slate-300"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>${session.date}</span>
                         </div>
-                        <button onclick="deleteSession('${session.id}')" class="text-slate-400 hover:text-rose-400 text-xs font-semibold transition-all">
-                            <i class="fa-solid fa-trash-can mr-1"></i> Delete Log
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openEditSessionModal('${session.id}')" class="text-indigo-300 hover:text-indigo-200 text-xs font-semibold transition-all">
+                                <i class="fa-solid fa-pen mr-1"></i> Edit
+                            </button>
+                            <button onclick="deleteSession('${session.id}')" class="text-slate-400 hover:text-rose-400 text-xs font-semibold transition-all">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Delete Log
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        ${session.minutes ? `<span class="bg-cyan-950/60 text-cyan-300 px-2.5 py-1 rounded-lg border border-cyan-800/60"><i class="fa-regular fa-clock mr-1"></i>Session time: ${session.minutes} min</span>` : ''}
+                        ${session.totalReps ? `<span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-800/60"><i class="fa-solid fa-repeat mr-1"></i>Total reps: ${session.totalReps}</span>` : ''}
                     </div>
                     <div class="space-y-1.5">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged Exercises</label>
@@ -1176,6 +1270,75 @@
             renderRules();
         }
 
+        function formatDateLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function renderWeeklyProgress() {
+            const container = document.getElementById('weeklyProgressContainer');
+            if (!container) return;
+
+            const today = new Date();
+            const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const sessionsByDay = weekdays.map(() => []);
+            const weekDates = weekdays.map((_, index) => {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + index);
+                return formatDateLocal(date);
+            });
+            const eligibleSessions = appState.workoutSessions.filter(session => {
+                const category = String(session.category || '').toLowerCase();
+                return category !== 'warm-up' && category !== 'warm up' && category !== 'rest'
+                    && session.date >= weekDates[0] && session.date <= weekDates[6];
+            });
+
+            eligibleSessions.forEach(session => {
+                const dayIndex = weekDates.indexOf(session.date);
+                if (dayIndex >= 0) sessionsByDay[dayIndex].push(session);
+            });
+
+            const completedDays = sessionsByDay.filter(sessions => sessions.length > 0).length;
+            const segments = weekdays.map((_, index) => {
+                const start = index * 360 / 7 + 1;
+                const end = (index + 1) * 360 / 7 - 1;
+                return `${sessionsByDay[index].length ? '#6366f1' : '#334155'} ${start}deg ${end}deg`;
+            });
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            const dailyDetails = weekdays.map((weekday, index) => {
+                const sessions = sessionsByDay[index];
+                const categories = [...new Set(sessions.map(session => session.category))].join(', ');
+                return `
+                    <div class="flex items-center justify-between gap-3 py-2 border-b border-cardBorder/70 last:border-0">
+                        <span class="text-xs font-semibold ${sessions.length ? 'text-white' : 'text-slate-500'}">${weekday}</span>
+                        <span class="text-xs text-right ${sessions.length ? 'text-indigo-300' : 'text-slate-500'}">${sessions.length ? categories : 'No workout logged'}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center gap-4">
+                    <div class="relative w-56 h-56 rounded-full" style="background: conic-gradient(${segments.join(',')})">
+                        <div class="absolute inset-5 rounded-full bg-cardBg flex flex-col items-center justify-center">
+                            <span class="text-4xl font-extrabold text-white">${completedDays}<span class="text-xl text-slate-400">/7</span></span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Days active</span>
+                            <span class="text-[11px] text-indigo-300 mt-1">${eligibleSessions.length} workout${eligibleSessions.length === 1 ? '' : 's'}</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">${weekDates[0]} – ${weekDates[6]}</p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-2">This week <span class="font-normal text-slate-400">(${formatDateLocal(weekStart)} – ${formatDateLocal(weekEnd)})</span></h3>
+                    <div>${dailyDetails}</div>
+                </div>
+            `;
+        }
+
         // --- Interactive Calendar Functions ---
         function renderCalendar() {
             const year = currentCalendarDate.getFullYear();
@@ -1189,7 +1352,7 @@
             const grid = document.getElementById('calendarDaysGrid');
             grid.innerHTML = '';
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = formatDateLocal(new Date());
 
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
@@ -1203,7 +1366,8 @@
                 const dateStr = `${year}-${monthStr}-${dayStr}`;
 
                 const planned = appState.calendarSchedule[dateStr];
-                const isCompleted = appState.workoutSessions.some(s => s.date === dateStr);
+                const completedSessions = appState.workoutSessions.filter(s => s.date === dateStr);
+                const isCompleted = completedSessions.length > 0;
                 const isToday = todayStr === dateStr;
 
                 const cell = document.createElement('div');
@@ -1228,6 +1392,12 @@
                 }
 
                 const checkIcon = isCompleted ? `<span class="text-emerald-400 text-xs" title="Logged Session"><i class="fa-solid fa-circle-check"></i></span>` : '';
+                const completedBadges = completedSessions.map(session => {
+                    const style = session.category === 'Warm-Up'
+                        ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                    return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}" title="Completed: ${session.category}">${session.category} ✓</span>`;
+                }).join('');
 
                 cell.innerHTML = `
                     <div class="flex justify-between items-center w-full">
@@ -1237,6 +1407,7 @@
                     <div class="mt-1 flex flex-col gap-1">
                         ${badgeHtml}
                         ${planned && planned.notes ? `<p class="text-[9px] text-slate-400 truncate">${planned.notes}</p>` : ''}
+                        ${completedBadges}
                     </div>
                 `;
                 grid.appendChild(cell);
