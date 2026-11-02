@@ -141,13 +141,6 @@
                     <button onclick="saveAllChanges()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 active:scale-95">
                         <i class="fa-solid fa-floppy-disk"></i> Save All
                     </button>
-                    <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Export Backup JSON">
-                        <i class="fa-solid fa-download"></i> Export
-                    </button>
-                    <label class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-cardBorder px-2.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1" title="Import Backup JSON">
-                        <i class="fa-solid fa-upload"></i> Import
-                        <input type="file" id="importFile" onchange="importData(event)" accept=".json" class="hidden">
-                    </label>
                     <button onclick="openResetModal()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1" title="Reset Defaults">
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
@@ -197,6 +190,7 @@
                     </button>
                 </div>
             </div>
+            <p class="text-xs text-slate-400 px-1">Your warm-up and stretch routine is under <strong class="text-slate-300">Rules & Standards</strong>.</p>
 
             <!-- Exercises Grid Container -->
             <div id="exerciseContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -285,6 +279,17 @@
 
         <!-- TAB 4: Core Rules & Standards -->
         <section id="tab-rules" class="hidden space-y-6">
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-person-walking text-emerald-400"></i> Warm-Up & Stretch Routine
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Write your complete warm-up in the order you do it. Changes save automatically and sync across your devices.</p>
+                </div>
+                <textarea id="warmupRoutine" rows="12" oninput="handleWarmupRoutineInput(this.value)" placeholder="1. Exercise or stretch - duration, reps, or notes&#10;2. Next movement&#10;3. Continue your routine..." class="w-full px-4 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm leading-relaxed text-white placeholder-slate-500 focus:outline-none focus:border-accent"></textarea>
+                <p id="warmupRoutineSaveStatus" role="status" aria-live="polite" class="text-xs text-slate-400">Your routine is saved automatically.</p>
+            </div>
+
             <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
@@ -322,7 +327,6 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
                     <select id="modalExCategory" class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
-                        <option value="Warm-Up">Warm-Up</option>
                         <option value="Push">Push</option>
                         <option value="Pull">Pull</option>
                         <option value="Legs">Legs</option>
@@ -514,7 +518,7 @@
             </div>
             <div>
                 <h3 class="text-base font-bold text-white">Reset to Default Data?</h3>
-                <p class="text-xs text-slate-400 mt-1">This will erase all custom exercises, video links, logged workouts, and rules and restore factory sample data.</p>
+                <p class="text-xs text-slate-400 mt-1">This will erase custom exercises, logged workouts, your warm-up routine, and custom rules, then restore the factory defaults.</p>
             </div>
             <div class="flex justify-center gap-3 pt-2">
                 <button onclick="closeResetModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
@@ -566,6 +570,18 @@
             { id: 'stab-2', name: 'Elephant Walk', category: 'Mobility / Stability', standard: '30 reps per leg with palms flat or fingertips touching floor.', videoUrl: '' }
         ];
 
+        const DEFAULT_WARMUP_ROUTINE = DEFAULT_EXERCISES
+            .filter(exercise => exercise.category === 'Warm-Up')
+            .map((exercise, index) => `${index + 1}. ${exercise.name} - ${exercise.standard}`)
+            .join('\n');
+
+        function buildWarmupRoutine(exercises) {
+            const routineItems = exercises
+                .filter(exercise => exercise.category === 'Warm-Up')
+                .map((exercise, index) => `${index + 1}. ${exercise.name} - ${exercise.standard}`);
+            return routineItems.length ? routineItems.join('\n') : DEFAULT_WARMUP_ROUTINE;
+        }
+
         const DEFAULT_RULES = [
             { id: 'rule-1', title: '1-2 Reps In Reserve (RIR)', desc: 'Train with 1-2 reps left in the tank on early sets. Take only the final set of a exercise near failure.' },
             { id: 'rule-2', title: 'Full Range of Motion First', desc: 'Prioritize full joint angles (biceps to forearm, hamstrings to calf) before scaling load.' },
@@ -579,7 +595,8 @@
             videoLinks: {}, // Explicit map: id -> URL (can be "")
             workoutSessions: [],
             rules: [],
-            calendarSchedule: {}
+            calendarSchedule: {},
+            warmupRoutine: DEFAULT_WARMUP_ROUTINE
         };
 
         let currentDayFilter = 'all';
@@ -600,12 +617,18 @@
         };
 
         window.addEventListener('offline', () => {
-            if (currentUser && cloudReady) updateSyncStatus('offline', 'Offline - saved on this device');
+            if (currentUser && cloudReady) {
+                updateSyncStatus('offline', 'Offline - saved on this device');
+                const routineStatus = document.getElementById('warmupRoutineSaveStatus');
+                if (routineStatus) routineStatus.textContent = 'Saved on this device; it will sync when you are back online.';
+            }
         });
         window.addEventListener('online', () => {
             if (currentUser && cloudReady) syncStateToCloud().catch(error => {
                 console.error('Cloud sync retry failed:', error);
                 updateSyncStatus('error', 'Sync failed - retry with Save All');
+                const routineStatus = document.getElementById('warmupRoutineSaveStatus');
+                if (routineStatus) routineStatus.textContent = 'Cloud sync failed. Routine is saved on this device; retry with Save All.';
             });
         });
 
@@ -684,6 +707,7 @@
                 renderWorkoutSessions();
                 renderWeeklyProgress();
                 renderRules();
+                renderWarmupRoutine();
                 renderCalendar();
                 document.getElementById('sessionDate').valueAsDate = new Date();
             } catch (error) {
@@ -718,6 +742,9 @@
             appState.calendarSchedule = parsed.calendarSchedule && typeof parsed.calendarSchedule === 'object'
                 ? parsed.calendarSchedule
                 : {};
+            appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
+                ? parsed.warmupRoutine
+                : buildWarmupRoutine(appState.exercises);
         }
 
         async function loadCloudState(userId) {
@@ -774,10 +801,17 @@
         function scheduleCloudSave() {
             clearTimeout(cloudSyncTimer);
             updateSyncStatus(navigator.onLine ? 'syncing' : 'offline', navigator.onLine ? 'Waiting to sync...' : 'Offline - saved on this device');
+            const routineStatus = document.getElementById('warmupRoutineSaveStatus');
+            if (routineStatus && appState.warmupRoutine !== undefined) {
+                routineStatus.textContent = navigator.onLine
+                    ? 'Saved on this device; syncing your routine...'
+                    : 'Saved on this device; it will sync when you are back online.';
+            }
             cloudSyncTimer = setTimeout(() => {
                 syncStateToCloud().catch(error => {
                     console.error('Cloud sync failed:', error);
                     updateSyncStatus(navigator.onLine ? 'error' : 'offline', navigator.onLine ? 'Sync failed - retry with Save All' : 'Offline - saved on this device');
+                    if (routineStatus) routineStatus.textContent = 'Cloud sync failed. Your routine is saved on this device; retry with Save All.';
                     triggerToast('Saved on this device, but cloud sync failed. Try Save All again.');
                 });
             }, 500);
@@ -795,6 +829,8 @@
                 updateSyncStatus('syncing', 'Syncing to your account...');
                 await writeCloudState(userId);
                 updateSyncStatus('synced', `Synced at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`);
+                const routineStatus = document.getElementById('warmupRoutineSaveStatus');
+                if (routineStatus) routineStatus.textContent = 'Routine and workout data synced across devices.';
             });
             cloudSyncChain = pendingSave;
             return pendingSave;
@@ -805,11 +841,14 @@
             if (raw) {
                 try {
                     const parsed = JSON.parse(raw);
-                    appState.exercises = parsed.exercises || DEFAULT_EXERCISES;
+                    appState.exercises = Array.isArray(parsed.exercises) ? parsed.exercises : [...DEFAULT_EXERCISES];
                     appState.videoLinks = parsed.videoLinks || {};
                     appState.workoutSessions = parsed.workoutSessions || [];
                     appState.rules = parsed.rules || DEFAULT_RULES;
                     appState.calendarSchedule = parsed.calendarSchedule || {};
+                    appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
+                        ? parsed.warmupRoutine
+                        : buildWarmupRoutine(appState.exercises);
                     return;
                 } catch(e) {
                     console.error("Error parsing storage state:", e);
@@ -824,6 +863,7 @@
             appState.workoutSessions = [];
             appState.rules = [...DEFAULT_RULES];
             appState.calendarSchedule = {};
+            appState.warmupRoutine = DEFAULT_WARMUP_ROUTINE;
             saveAllChanges(false);
         }
 
@@ -873,7 +913,7 @@
         }
 
         // --- Category Filters & Directory ---
-        const CATEGORIES = ['Warm-Up', 'Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability'];
+        const CATEGORIES = ['Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability'];
 
         function renderCategoryFilterButtons() {
             const container = document.getElementById('categoryFilterButtons');
@@ -899,6 +939,7 @@
             container.innerHTML = '';
 
             const filtered = appState.exercises.filter(ex => {
+                if (ex.category === 'Warm-Up') return false;
                 const matchesCat = currentDayFilter === 'all' || ex.category === currentDayFilter;
                 const matchesQuery = ex.name.toLowerCase().includes(query) || ex.standard.toLowerCase().includes(query);
                 return matchesCat && matchesQuery;
@@ -1364,6 +1405,22 @@
         }
 
         // --- Core Rules & Standards CRUD ---
+        function renderWarmupRoutine() {
+            const input = document.getElementById('warmupRoutine');
+            if (input) input.value = appState.warmupRoutine || '';
+        }
+
+        function handleWarmupRoutineInput(value) {
+            appState.warmupRoutine = value;
+            saveAllChanges(false);
+            const status = document.getElementById('warmupRoutineSaveStatus');
+            if (status) {
+                status.textContent = currentUser && cloudReady
+                    ? 'Saved on this device; syncing your routine...'
+                    : 'Saved on this device.';
+            }
+        }
+
         function renderRules() {
             const container = document.getElementById('rulesListContainer');
             container.innerHTML = '';
@@ -1656,43 +1713,7 @@
             closeScheduleModal();
         }
 
-        // --- Export / Import / Reset ---
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
-            const anchor = document.createElement('a');
-            anchor.setAttribute("href", dataStr);
-            anchor.setAttribute("download", `ATG_Hybrid_Dashboard_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.exercises) appState.exercises = parsed.exercises;
-                    if (parsed.videoLinks) appState.videoLinks = parsed.videoLinks;
-                    if (parsed.workoutSessions) appState.workoutSessions = parsed.workoutSessions;
-                    if (parsed.rules) appState.rules = parsed.rules;
-                    if (parsed.calendarSchedule) appState.calendarSchedule = parsed.calendarSchedule;
-
-                    saveAllChanges(true);
-                    renderExercises();
-                    renderWorkoutSessions();
-                    renderRules();
-                    renderCalendar();
-                } catch(err) {
-                    alert('Invalid JSON file format.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
+        // --- Reset ---
         function openResetModal() {
             document.getElementById('resetModal').classList.remove('hidden');
         }
@@ -1707,6 +1728,7 @@
             renderExercises();
             renderWorkoutSessions();
             renderRules();
+            renderWarmupRoutine();
             renderCalendar();
             closeResetModal();
             triggerToast("Factory default data restored.");
