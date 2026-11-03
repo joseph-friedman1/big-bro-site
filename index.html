@@ -677,7 +677,10 @@
 
         // Initialize Application State
         window.onload = function() {
-            document.getElementById('sessionCategory').addEventListener('change', refreshPreviousWorkoutHints);
+            document.getElementById('sessionCategory').addEventListener('change', () => {
+                refreshExerciseOptionsForCategory();
+                refreshPreviousWorkoutHints();
+            });
             document.getElementById('sessionDate').addEventListener('change', refreshPreviousWorkoutHints);
             initializeAuth();
         };
@@ -1387,10 +1390,10 @@
         function addExerciseRowToModal(exercise = null) {
             const container = document.getElementById('modalExerciseRowsContainer');
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
-            const optionsHtml = appState.exercises.map(item =>
-                `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${escapeHtml(item.category)})</option>`
-            ).join('');
-            const variationOptionsHtml = (exercise && appState.exercises.find(item => item.name === exercise.name)?.variations || [])
+            const category = document.getElementById('sessionCategory').value;
+            const optionsHtml = getExerciseOptionsHtml(category);
+            const variationOptionsHtml = (exercise && appState.exercises.find(item =>
+                item.name === exercise.name && item.category === category)?.variations || [])
                 .map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
 
             const rowDiv = document.createElement('div');
@@ -1437,7 +1440,8 @@
             container.appendChild(comparison);
             const nameInput = rowDiv.querySelector('.session-ex-name');
             nameInput.addEventListener('change', () => {
-                const selectedExercise = appState.exercises.find(item => item.name === nameInput.value);
+                const selectedExercise = appState.exercises.find(item =>
+                    item.name === nameInput.value && item.category === document.getElementById('sessionCategory').value);
                 rowDiv.querySelector(`#${rowId}-variation-options`).innerHTML =
                     (selectedExercise?.variations || []).map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
                 updatePreviousExerciseHint(rowDiv);
@@ -1452,6 +1456,25 @@
                 rowDiv.querySelector('.session-ex-time-unit').value = duration.unit;
             }
             updatePreviousExerciseHint(rowDiv);
+        }
+
+        function getExerciseOptionsHtml(category) {
+            return appState.exercises
+                .filter(exercise => exercise.category === category)
+                .map(exercise => `<option value="${escapeHtml(exercise.name)}"></option>`)
+                .join('');
+        }
+
+        function refreshExerciseOptionsForCategory() {
+            const category = document.getElementById('sessionCategory').value;
+            document.querySelectorAll('#modalExerciseRowsContainer > div[id^="row-"]').forEach(row => {
+                const exerciseName = row.querySelector('.session-ex-name').value.trim();
+                row.querySelector(`#${row.id}-exercise-options`).innerHTML = getExerciseOptionsHtml(category);
+                const selectedExercise = appState.exercises.find(exercise =>
+                    exercise.name === exerciseName && exercise.category === category);
+                row.querySelector(`#${row.id}-variation-options`).innerHTML =
+                    (selectedExercise?.variations || []).map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
+            });
         }
 
         function getPreviousWorkout(category, excludeId = '') {
