@@ -109,7 +109,7 @@
                     </div>
                     <div>
                         <h1 class="text-lg font-bold tracking-tight text-white leading-tight">Friedmans Calisthenics</h1>
-                        <p class="text-xs text-slate-400">Training, progress & rewards</p>
+                        <p class="text-xs text-slate-400">Training & progress</p>
                     </div>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                         <i class="fa-solid fa-chart-pie mr-1.5"></i>Weekly
                     </button>
                     <button onclick="switchTab('skills')" id="nav-skills" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-gamepad mr-1.5"></i>Skills & XP
+                        <i class="fa-solid fa-gamepad mr-1.5"></i>Skills
                     </button>
                     <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
                         <i class="fa-solid fa-list-check mr-1.5"></i>Directory
@@ -180,32 +180,21 @@
             </div>
         </section>
 
-        <!-- TAB: Skills, XP & Rewards -->
+        <!-- TAB: Skills -->
         <section id="tab-skills" class="hidden space-y-6">
             <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-indigo-400"></i> Skills & Rewards</h2>
-                        <p class="text-xs text-slate-400 mt-1">Add goals, check them off once you achieve them, earn XP, and spend XP on your own rewards.</p>
-                    </div>
-                    <div class="bg-slate-900 rounded-2xl border border-indigo-500/30 px-5 py-3 text-center min-w-32">
-                        <div id="availableXp" class="text-3xl font-extrabold text-indigo-300">0 XP</div>
-                        <div id="xpEarnedSummary" class="text-[11px] text-slate-400">0 earned · 0 spent</div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-indigo-400"></i> Skills & Goals</h2>
+                        <p class="text-xs text-slate-400 mt-1">Add skills or goals and mark them complete as you make progress.</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
                         <div id="skillsCompletedSummary" class="text-lg font-bold text-white">0 / 0</div>
-                        <div class="text-[11px] text-slate-400">Skills completed</div>
+                        <div class="text-[11px] text-slate-400">Skills complete</div>
                     </div>
-                    <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
-                        <div id="rewardsUnlockedSummary" class="text-lg font-bold text-white">0</div>
-                        <div class="text-[11px] text-slate-400">Rewards unlocked</div>
-                    </div>
-                    <div class="bg-slate-900/70 rounded-xl p-3 border border-cardBorder">
-                        <div id="nextRewardSummary" class="text-lg font-bold text-white">Add a reward</div>
-                        <div class="text-[11px] text-slate-400">Next reward to unlock</div>
-                    </div>
+                    <p class="self-center text-xs text-slate-400">You can edit, undo, or remove a skill at any time.</p>
                 </div>
             </div>
 
@@ -213,33 +202,13 @@
                 <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
                     <div>
                         <h3 class="text-lg font-bold text-white">My Skills</h3>
-                        <p class="text-xs text-slate-400 mt-1">Examples: first pull-up, longer L-sit, improved mobility goal. You choose the XP.</p>
+                        <p class="text-xs text-slate-400 mt-1">Examples: first pull-up, longer L-sit, or improved mobility.</p>
                     </div>
-                    <form id="skillForm" onsubmit="handleAddSkill(event)" class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                        <input id="skillName" type="text" maxlength="80" required placeholder="Skill or fitness goal" class="px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-                        <div class="flex gap-2">
-                            <input id="skillXp" type="number" min="1" max="10000" value="25" required aria-label="XP reward for skill" class="w-24 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-                            <span class="self-center text-xs text-slate-400">XP</span>
-                            <button type="submit" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
-                        </div>
+                    <form id="skillForm" onsubmit="handleAddSkill(event)" class="flex gap-2">
+                        <input id="skillName" type="text" maxlength="80" required placeholder="Skill or fitness goal" class="min-w-0 flex-1 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <button type="submit" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
                     </form>
                     <div id="skillsList" class="space-y-2"></div>
-                </div>
-
-                <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-white">My Rewards</h3>
-                        <p class="text-xs text-slate-400 mt-1">Add prizes such as a favorite treat or new gear. They stay locked until you have enough XP.</p>
-                    </div>
-                    <form id="rewardForm" onsubmit="handleAddReward(event)" class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                        <input id="rewardName" type="text" maxlength="80" required placeholder="Reward (e.g. Wegmans cheesecake)" class="px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-                        <div class="flex gap-2">
-                            <input id="rewardCost" type="number" min="1" max="1000000" value="100" required aria-label="Reward XP cost" class="w-24 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-                            <span class="self-center text-xs text-slate-400">XP</span>
-                            <button type="submit" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
-                        </div>
-                    </form>
-                    <div id="rewardsList" class="space-y-2"></div>
                 </div>
             </div>
         </section>
@@ -259,7 +228,10 @@
                     <div id="categoryFilterButtons" class="flex flex-wrap gap-1.5">
                         <!-- Dynamic Day Filter Buttons -->
                     </div>
-                    <button onclick="openAddExerciseModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 whitespace-nowrap ml-auto">
+                    <button id="exerciseReorderButton" onclick="toggleExerciseReorderMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ml-auto">
+                        <i class="fa-solid fa-arrow-up-wide-short"></i> Reorder
+                    </button>
+                    <button onclick="openAddExerciseModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-plus"></i> Add Exercise
                     </button>
                 </div>
@@ -303,8 +275,11 @@
                         <option value="Cardio">Cardio</option>
                         <option value="Mobility / Stability">Mobility / Stability</option>
                     </select>
-                    <button id="clearLogDateFilter" type="button" onclick="openLogbookFilter('all', null)" class="hidden w-full sm:w-auto px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold">
-                        Clear date filter
+                    <select id="logWeekFilter" onchange="handleLogWeekFilterChange()" aria-label="Filter by week" class="w-full sm:w-56 px-3.5 py-2 bg-slate-950 border border-cardBorder rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-accent">
+                        <option value="all">All weeks</option>
+                    </select>
+                    <button id="clearLogDateFilter" type="button" onclick="clearLogFilters()" class="hidden w-full sm:w-auto px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold">
+                        Clear filters
                     </button>
                 </div>
                 <p id="activeLogFilterLabel" class="hidden text-xs text-indigo-300"></p>
@@ -414,6 +389,10 @@
                     <textarea id="modalExStandard" rows="3" required placeholder="Describe reps, load, or standard..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
                 </div>
                 <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Variations (comma separated)</label>
+                    <input type="text" id="modalExVariations" placeholder="e.g. Diamond Push-Up, Incline Push-Up" class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                </div>
+                <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">YouTube Video Link (Optional)</label>
                     <input type="url" id="modalExVideo" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
                 </div>
@@ -478,8 +457,13 @@
                 </div>
 
                 <div>
-                    <label for="sessionMinutes" class="block text-xs font-semibold text-slate-400 uppercase mb-1">Session Time (minutes)</label>
-                    <input type="number" id="sessionMinutes" min="0" step="1" placeholder="Optional" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                    <label for="sessionTimeValue" class="block text-xs font-semibold text-slate-400 uppercase mb-1">Session Time (optional)</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="sessionTimeValue" min="0" step="1" placeholder="Duration" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                        <select id="sessionTimeUnit" aria-label="Session time unit" class="px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                            <option value="minutes">Minutes</option><option value="seconds">Seconds</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="space-y-3">
@@ -502,7 +486,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Session Notes (Optional)</label>
-                    <textarea id="sessionNotes" rows="2" placeholder="Energy levels, form notes, tempo details..." class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
+                    <textarea id="sessionNotes" rows="4" placeholder="One note per line (e.g. energy, form, tempo)..." class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
                 </div>
 
                 <div class="border-t border-cardBorder pt-3">
@@ -555,6 +539,10 @@
             <form onsubmit="handleSaveSchedule(event)" class="space-y-4">
                 <input type="hidden" id="scheduleDateStr">
                 <p id="scheduleDateLabel" class="text-sm font-bold text-indigo-300"></p>
+                <div id="calendarCompletedSessions" class="hidden space-y-2"></div>
+                <button type="button" id="logAnotherWorkoutButton" onclick="logAnotherWorkoutForDate()" class="w-full px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-semibold">
+                    <i class="fa-solid fa-plus mr-1"></i> Log a workout for this day
+                </button>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Category / Day Type</label>
                     <select id="scheduleCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
@@ -593,7 +581,7 @@
             </div>
             <div>
                 <h3 class="text-base font-bold text-white">Reset to Default Data?</h3>
-                <p class="text-xs text-slate-400 mt-1">This will erase custom exercises, logged workouts, your warm-up routine, custom rules, skills, rewards, and calendar plans, then restore the factory defaults.</p>
+                <p class="text-xs text-slate-400 mt-1">This will erase custom exercises, logged workouts, your warm-up routine, custom rules, skills, and calendar plans, then restore the factory defaults.</p>
             </div>
             <div class="flex justify-center gap-3 pt-2">
                 <button onclick="closeResetModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
@@ -672,8 +660,7 @@
             rules: [],
             calendarSchedule: {},
             warmupRoutine: DEFAULT_WARMUP_ROUTINE,
-            skills: [],
-            rewards: []
+            skills: []
         };
 
         let currentDayFilter = 'all';
@@ -685,6 +672,8 @@
         let cloudSyncChain = Promise.resolve();
         let authMode = 'signin';
         let activeLogDateFilter = null;
+        let activeLogWeekFilter = 'all';
+        let exerciseReorderMode = false;
 
         // Initialize Application State
         window.onload = function() {
@@ -812,6 +801,20 @@
             }
         }
 
+        function normalizeSkills(skills) {
+            if (!Array.isArray(skills)) return [];
+            return skills
+                .filter(skill => skill && typeof skill === 'object' && typeof skill.name === 'string' && skill.name.trim())
+                .map(skill => ({
+                    id: typeof skill.id === 'string' && skill.id
+                        ? skill.id
+                        : `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                    name: skill.name.trim(),
+                    completed: Boolean(skill.completed),
+                    completedAt: skill.completedAt || null
+                }));
+        }
+
         function applySavedState(parsed) {
             appState.exercises = Array.isArray(parsed.exercises) ? parsed.exercises : [...DEFAULT_EXERCISES];
             appState.videoLinks = parsed.videoLinks && typeof parsed.videoLinks === 'object' ? parsed.videoLinks : {};
@@ -823,8 +826,7 @@
             appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                 ? parsed.warmupRoutine
                 : buildWarmupRoutine(appState.exercises);
-            appState.skills = Array.isArray(parsed.skills) ? parsed.skills : [];
-            appState.rewards = Array.isArray(parsed.rewards) ? parsed.rewards : [];
+            appState.skills = normalizeSkills(parsed.skills);
         }
 
         async function loadCloudState(userId) {
@@ -929,8 +931,7 @@
                     appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                         ? parsed.warmupRoutine
                         : buildWarmupRoutine(appState.exercises);
-                    appState.skills = Array.isArray(parsed.skills) ? parsed.skills : [];
-                    appState.rewards = Array.isArray(parsed.rewards) ? parsed.rewards : [];
+                    appState.skills = normalizeSkills(parsed.skills);
                     return;
                 } catch(e) {
                     console.error("Error parsing storage state:", e);
@@ -947,7 +948,6 @@
             appState.calendarSchedule = {};
             appState.warmupRoutine = DEFAULT_WARMUP_ROUTINE;
             appState.skills = [];
-            appState.rewards = [];
             saveAllChanges(false);
         }
 
@@ -1008,7 +1008,6 @@
                     || !Array.isArray(importedState.workoutSessions)
                     || (importedState.rules !== undefined && !Array.isArray(importedState.rules))
                     || (importedState.skills !== undefined && !Array.isArray(importedState.skills))
-                    || (importedState.rewards !== undefined && !Array.isArray(importedState.rewards))
                     || (importedState.calendarSchedule !== undefined
                         && (!importedState.calendarSchedule || typeof importedState.calendarSchedule !== 'object' || Array.isArray(importedState.calendarSchedule)))) {
                     throw new Error('This file does not contain a valid Friedmans Calisthenics backup.');
@@ -1080,19 +1079,37 @@
 
         function renderCategoryFilterButtons() {
             const container = document.getElementById('categoryFilterButtons');
-            let html = `<button onclick="filterDay('all')" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20">All</button>`;
+            let html = `<button onclick="filterDay('all', this)" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20">All</button>`;
             CATEGORIES.forEach(cat => {
-                html += `<button onclick="filterDay('${cat}')" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-cardBorder text-slate-300 hover:bg-slate-800 transition-all">${cat}</button>`;
+                html += `<button onclick="filterDay('${cat}', this)" class="day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-cardBorder text-slate-300 hover:bg-slate-800 transition-all">${cat}</button>`;
             });
             container.innerHTML = html;
         }
 
-        function filterDay(cat) {
+        function filterDay(cat, button) {
             currentDayFilter = cat;
+            if (cat === 'all') {
+                exerciseReorderMode = false;
+                const reorderButton = document.getElementById('exerciseReorderButton');
+                reorderButton.innerHTML = '<i class="fa-solid fa-arrow-up-wide-short"></i> Reorder';
+                reorderButton.classList.remove('bg-indigo-600', 'text-white');
+                reorderButton.classList.add('bg-slate-800');
+            }
             document.querySelectorAll('.day-filter-btn').forEach(btn => {
                 btn.className = "day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 border border-cardBorder text-slate-300 hover:bg-slate-800 transition-all";
             });
-            event.currentTarget.className = "day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20";
+            if (button) button.className = "day-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent text-white transition-all shadow-md shadow-accent/20";
+            renderExercises();
+        }
+
+        function moveExerciseBefore(sourceId, targetId) {
+            if (!exerciseReorderMode || sourceId === targetId) return;
+            const source = appState.exercises.find(item => item.id === sourceId);
+            const target = appState.exercises.find(item => item.id === targetId);
+            if (!source || !target || source.category !== currentDayFilter || target.category !== currentDayFilter) return;
+            appState.exercises.splice(appState.exercises.indexOf(source), 1);
+            appState.exercises.splice(appState.exercises.indexOf(target), 0, source);
+            saveAllChanges(false);
             renderExercises();
         }
 
@@ -1118,13 +1135,27 @@
                 return;
             }
 
-            filtered.forEach(ex => {
+            filtered.forEach((ex, filteredIndex) => {
                 // Priority: User Explicit Video Map entry over default URL
                 const savedLink = appState.videoLinks.hasOwnProperty(ex.id) ? appState.videoLinks[ex.id] : (ex.videoUrl || '');
                 const hasLink = savedLink.trim() !== '';
 
                 const card = document.createElement('div');
                 card.className = 'bg-cardBg border border-cardBorder rounded-2xl p-5 flex flex-col justify-between shadow-sm hover:border-slate-700 transition-all group';
+                card.dataset.exerciseId = ex.id;
+                card.draggable = exerciseReorderMode;
+                if (exerciseReorderMode) {
+                    card.classList.add('cursor-move');
+                    card.addEventListener('dragstart', event => {
+                        event.dataTransfer.setData('text/plain', ex.id);
+                        event.dataTransfer.effectAllowed = 'move';
+                    });
+                    card.addEventListener('dragover', event => event.preventDefault());
+                    card.addEventListener('drop', event => {
+                        event.preventDefault();
+                        moveExerciseBefore(event.dataTransfer.getData('text/plain'), ex.id);
+                    });
+                }
                 card.innerHTML = `
                     <div class="space-y-3">
                         <div class="flex justify-between items-start gap-2">
@@ -1138,12 +1169,17 @@
                                 <button onclick="openEditExerciseModal('${ex.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all" title="Edit Exercise">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
+                                ${exerciseReorderMode ? `
+                                    <button onclick="moveExercise('${ex.id}', -1)" ${filteredIndex === 0 ? 'disabled' : ''} class="bg-slate-800 hover:bg-indigo-500/20 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs px-2 py-1 rounded-lg" aria-label="Move ${ex.name} up" title="Move up"><i class="fa-solid fa-arrow-up"></i></button>
+                                    <button onclick="moveExercise('${ex.id}', 1)" ${filteredIndex === filtered.length - 1 ? 'disabled' : ''} class="bg-slate-800 hover:bg-indigo-500/20 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs px-2 py-1 rounded-lg" aria-label="Move ${ex.name} down" title="Move down"><i class="fa-solid fa-arrow-down"></i></button>
+                                ` : ''}
                                 <button onclick="deleteExercise('${ex.id}')" class="bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 text-xs px-2.5 py-1 rounded-lg font-semibold transition-all" title="Delete Exercise">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
                         </div>
                         <h3 class="font-bold text-white text-base leading-snug">${ex.name}</h3>
+                        ${(ex.variations || []).length ? `<p class="text-[11px] text-indigo-300">Variations: ${ex.variations.map(escapeHtml).join(', ')}</p>` : ''}
                         <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3 rounded-xl border border-cardBorder/80">
                             <strong class="text-slate-400 uppercase text-[10px] block mb-0.5">Standard / Target:</strong> ${ex.standard}
                         </p>
@@ -1188,6 +1224,7 @@
             document.getElementById('modalExName').value = ex.name;
             document.getElementById('modalExCategory').value = ex.category;
             document.getElementById('modalExStandard').value = ex.standard;
+            document.getElementById('modalExVariations').value = (ex.variations || []).join(', ');
             document.getElementById('modalExVideo').value = appState.videoLinks[ex.id] || ex.videoUrl || '';
             document.getElementById('exerciseModal').classList.remove('hidden');
         }
@@ -1204,6 +1241,10 @@
             const standard = document.getElementById('modalExStandard').value.trim();
             const videoUrl = document.getElementById('modalExVideo').value.trim();
 
+            const variations = [...new Set(document.getElementById('modalExVariations').value
+                .split(',')
+                .map(variation => variation.trim())
+                .filter(Boolean))];
             if (id) {
                 // Update Existing
                 const ex = appState.exercises.find(e => e.id === id);
@@ -1211,12 +1252,13 @@
                     ex.name = name;
                     ex.category = category;
                     ex.standard = standard;
+                    ex.variations = variations;
                 }
                 appState.videoLinks[id] = videoUrl;
             } else {
                 // Create New
                 const newId = 'ex-' + Date.now();
-                appState.exercises.push({ id: newId, name, category, standard });
+                appState.exercises.push({ id: newId, name, category, standard, variations });
                 appState.videoLinks[newId] = videoUrl;
             }
 
@@ -1226,9 +1268,45 @@
         }
 
         function deleteExercise(id) {
+            const exercise = appState.exercises.find(item => item.id === id);
+            if (!exercise || !confirm(`Delete "${exercise.name}" from the directory? Existing workout logs will be kept.`)) return;
             appState.exercises = appState.exercises.filter(e => e.id !== id);
             delete appState.videoLinks[id];
             saveAllChanges(true);
+            renderExercises();
+        }
+
+        function toggleExerciseReorderMode() {
+            if (!exerciseReorderMode && currentDayFilter === 'all') {
+                triggerToast('Choose a category first to reorder its exercises.');
+                return;
+            }
+            exerciseReorderMode = !exerciseReorderMode;
+            if (exerciseReorderMode) document.getElementById('exerciseSearch').value = '';
+            const button = document.getElementById('exerciseReorderButton');
+            button.innerHTML = exerciseReorderMode
+                ? '<i class="fa-solid fa-check"></i> Done'
+                : '<i class="fa-solid fa-arrow-up-wide-short"></i> Reorder';
+            button.classList.toggle('bg-indigo-600', exerciseReorderMode);
+            button.classList.toggle('text-white', exerciseReorderMode);
+            button.classList.toggle('bg-slate-800', !exerciseReorderMode);
+            renderExercises();
+        }
+
+        function moveExercise(id, direction) {
+            if (!exerciseReorderMode) return;
+            const exercise = appState.exercises.find(item => item.id === id);
+            if (!exercise || exercise.category !== currentDayFilter) return;
+            const categoryIndices = appState.exercises
+                .map((item, index) => item.category === currentDayFilter ? index : -1)
+                .filter(index => index >= 0);
+            const currentPosition = categoryIndices.indexOf(appState.exercises.indexOf(exercise));
+            const nextIndex = categoryIndices[currentPosition + direction];
+            if (nextIndex === undefined) return;
+            const currentIndex = categoryIndices[currentPosition];
+            [appState.exercises[currentIndex], appState.exercises[nextIndex]] =
+                [appState.exercises[nextIndex], appState.exercises[currentIndex]];
+            saveAllChanges(false);
             renderExercises();
         }
 
@@ -1285,11 +1363,16 @@
 
         // --- Workout Logger Functions ---
         function openLogModal() {
+            openLogModalForDate(formatDateLocal(new Date()));
+        }
+
+        function openLogModalForDate(date) {
             document.getElementById('workoutLogForm').reset();
             document.getElementById('editSessionId').value = '';
             document.getElementById('logModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-accent"></i> Log Training Session';
             document.getElementById('saveSessionButton').textContent = 'Save Session Log';
-            document.getElementById('sessionDate').valueAsDate = new Date();
+            document.getElementById('sessionDate').value = date;
+            document.getElementById('sessionTimeUnit').value = 'minutes';
             document.getElementById('modalExerciseRowsContainer').innerHTML = '';
             addExerciseRowToModal();
             addExerciseRowToModal();
@@ -1304,33 +1387,42 @@
         function addExerciseRowToModal(exercise = null) {
             const container = document.getElementById('modalExerciseRowsContainer');
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
-
-            let optionsHtml = '';
-            appState.exercises.forEach(ex => {
-                optionsHtml += `<option value="${ex.name}">${ex.name} (${ex.category})</option>`;
-            });
+            const optionsHtml = appState.exercises.map(item =>
+                `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${escapeHtml(item.category)})</option>`
+            ).join('');
+            const variationOptionsHtml = (exercise && appState.exercises.find(item => item.name === exercise.name)?.variations || [])
+                .map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
 
             const rowDiv = document.createElement('div');
             rowDiv.className = 'flex flex-col md:flex-row gap-2 bg-slate-900/80 p-3 rounded-xl border border-cardBorder items-center';
             rowDiv.id = rowId;
             rowDiv.innerHTML = `
                 <div class="w-full md:flex-1">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Exercise</label>
-                    <select class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent">
-                        ${optionsHtml}
-                    </select>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Search exercise</label>
+                    <input type="text" list="${rowId}-exercise-options" class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent" placeholder="Type to find an exercise">
+                    <datalist id="${rowId}-exercise-options">${optionsHtml}</datalist>
                 </div>
                 <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sets x Reps (Optional)</label>
                     <input type="text" class="session-ex-reps w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 5 x 5">
                 </div>
                 <div class="w-full md:flex-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Variation (optional)</label>
+                    <input type="text" list="${rowId}-variation-options" class="session-ex-variation w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. Diamond">
+                    <datalist id="${rowId}-variation-options">${variationOptionsHtml}</datalist>
+                </div>
+                <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Weight / Load</label>
                     <input type="text" class="session-ex-weight w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="e.g. 25% BW">
                 </div>
-                <div class="w-full md:w-24">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Time (min)</label>
-                    <input type="number" min="0" step="1" class="session-ex-minutes w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="Cardio">
+                <div class="w-full md:w-32">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Time (optional)</label>
+                    <div class="flex gap-1">
+                        <input type="number" min="0" step="1" class="session-ex-time-value w-full min-w-0 px-2 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white placeholder-slate-600" placeholder="Time">
+                        <select class="session-ex-time-unit px-2 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-[10px] text-white" aria-label="Exercise time unit">
+                            <option value="minutes">min</option><option value="seconds">sec</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="w-full md:w-auto flex items-end pt-4 md:pt-0">
                     <button type="button" onclick="document.getElementById('${rowId}').nextElementSibling.remove(); document.getElementById('${rowId}').remove()" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-rose-500/10 transition-all">
@@ -1343,19 +1435,21 @@
             comparison.id = `${rowId}-previous`;
             comparison.className = 'hidden text-[10px] text-slate-400 px-1 -mt-1';
             container.appendChild(comparison);
-            rowDiv.querySelector('.session-ex-name').addEventListener('change', () => updatePreviousExerciseHint(rowDiv));
+            const nameInput = rowDiv.querySelector('.session-ex-name');
+            nameInput.addEventListener('change', () => {
+                const selectedExercise = appState.exercises.find(item => item.name === nameInput.value);
+                rowDiv.querySelector(`#${rowId}-variation-options`).innerHTML =
+                    (selectedExercise?.variations || []).map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
+                updatePreviousExerciseHint(rowDiv);
+            });
             if (exercise) {
-                const nameSelect = rowDiv.querySelector('.session-ex-name');
-                if (![...nameSelect.options].some(option => option.value === exercise.name)) {
-                    const option = document.createElement('option');
-                    option.value = exercise.name;
-                    option.textContent = exercise.name;
-                    nameSelect.appendChild(option);
-                }
-                nameSelect.value = exercise.name;
+                nameInput.value = exercise.name;
                 rowDiv.querySelector('.session-ex-reps').value = exercise.reps || '';
+                rowDiv.querySelector('.session-ex-variation').value = exercise.variation || '';
                 rowDiv.querySelector('.session-ex-weight').value = exercise.weight || '';
-                rowDiv.querySelector('.session-ex-minutes').value = exercise.minutes || '';
+                const duration = getDuration(exercise);
+                rowDiv.querySelector('.session-ex-time-value').value = duration.value || '';
+                rowDiv.querySelector('.session-ex-time-unit').value = duration.unit;
             }
             updatePreviousExerciseHint(rowDiv);
         }
@@ -1392,14 +1486,14 @@
             const category = document.getElementById('sessionCategory').value;
             const excludeId = document.getElementById('editSessionId').value;
             const previous = getPreviousWorkout(category, excludeId);
-            const exerciseName = row.querySelector('.session-ex-name').value;
+            const exerciseName = row.querySelector('.session-ex-name').value.trim();
             const previousExercise = previous && (previous.exercises || []).find(exercise => exercise.name === exerciseName);
             if (!previousExercise) {
                 output.classList.add('hidden');
                 output.textContent = '';
                 return;
             }
-            const time = previousExercise.minutes ? ` · ${previousExercise.minutes} min` : '';
+            const time = formatDuration(previousExercise) ? ` · ${formatDuration(previousExercise)}` : '';
             output.textContent = `Last time (${formatDisplayDate(previous.date)}): ${previousExercise.reps || 'no reps'} · ${previousExercise.weight || 'Bodyweight'}${time}`;
             output.classList.remove('hidden');
         }
@@ -1426,7 +1520,8 @@
             const date = document.getElementById('sessionDate').value;
             const category = document.getElementById('sessionCategory').value;
             const notes = document.getElementById('sessionNotes').value.trim();
-            const minutesValue = document.getElementById('sessionMinutes').value;
+            const timeValue = document.getElementById('sessionTimeValue').value;
+            const timeUnit = document.getElementById('sessionTimeUnit').value;
             const totalReps = document.getElementById('sessionTotalReps').value.trim();
 
             const rows = document.querySelectorAll('#modalExerciseRowsContainer > div');
@@ -1437,11 +1532,22 @@
 
             const exercisesList = [];
             rows.forEach(r => {
-                const name = r.querySelector('.session-ex-name').value;
+                const name = r.querySelector('.session-ex-name').value.trim();
                 const reps = r.querySelector('.session-ex-reps').value.trim();
                 const weight = r.querySelector('.session-ex-weight').value.trim() || 'Bodyweight';
-                const exerciseMinutes = r.querySelector('.session-ex-minutes').value;
-                exercisesList.push({ name, reps, weight, minutes: exerciseMinutes ? Number(exerciseMinutes) : null });
+                const variation = r.querySelector('.session-ex-variation').value.trim();
+                const exerciseTimeValue = r.querySelector('.session-ex-time-value').value;
+                const exerciseTimeUnit = r.querySelector('.session-ex-time-unit').value;
+                const duration = exerciseTimeValue ? Number(exerciseTimeValue) : null;
+                exercisesList.push({
+                    name,
+                    reps,
+                    variation,
+                    weight,
+                    timeValue: duration,
+                    timeUnit: exerciseTimeUnit,
+                    minutes: duration !== null && exerciseTimeUnit === 'minutes' ? duration : null
+                });
             });
 
             const savedSession = {
@@ -1449,7 +1555,9 @@
                 date,
                 category,
                 notes: notes || '-',
-                minutes: minutesValue ? Number(minutesValue) : null,
+                timeValue: timeValue ? Number(timeValue) : null,
+                timeUnit,
+                minutes: timeValue && timeUnit === 'minutes' ? Number(timeValue) : null,
                 totalReps,
                 exercises: exercisesList
             };
@@ -1475,7 +1583,9 @@
             document.getElementById('editSessionId').value = session.id;
             document.getElementById('sessionDate').value = session.date || '';
             document.getElementById('sessionCategory').value = session.category || 'Push';
-            document.getElementById('sessionMinutes').value = session.minutes || '';
+            const sessionDuration = getDuration(session);
+            document.getElementById('sessionTimeValue').value = sessionDuration.value || '';
+            document.getElementById('sessionTimeUnit').value = sessionDuration.unit;
             document.getElementById('sessionTotalReps').value = session.totalReps || '';
             document.getElementById('sessionNotes').value = session.notes === '-' ? '' : (session.notes || '');
             document.getElementById('logModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-accent"></i> Edit Training Session';
@@ -1503,13 +1613,19 @@
             const clearDateFilter = document.getElementById('clearLogDateFilter');
             container.innerHTML = '';
 
+            populateLogWeekFilter();
             const filtered = appState.workoutSessions.filter(session =>
                 (filter === 'all' || session.category === filter)
                 && (!activeLogDateFilter || session.date === activeLogDateFilter)
-            );
-            dateFilterLabel.classList.toggle('hidden', !activeLogDateFilter);
-            clearDateFilter.classList.toggle('hidden', !activeLogDateFilter);
-            dateFilterLabel.textContent = activeLogDateFilter ? `Showing sessions from ${formatDisplayDate(activeLogDateFilter)}` : '';
+                && (activeLogWeekFilter === 'all' || getWeekStartDate(session.date) === activeLogWeekFilter)
+            ).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+            clearDateFilter.classList.toggle('hidden', !activeLogDateFilter && activeLogWeekFilter === 'all');
+            dateFilterLabel.classList.toggle('hidden', !activeLogDateFilter && activeLogWeekFilter === 'all');
+            dateFilterLabel.textContent = activeLogDateFilter
+                ? `Showing sessions from ${formatDisplayDate(activeLogDateFilter)}`
+                : activeLogWeekFilter !== 'all'
+                    ? `Showing week of ${formatDisplayDate(activeLogWeekFilter)}`
+                    : '';
 
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -1522,11 +1638,11 @@
                 (session.exercises || []).forEach(ex => {
                     exercisesHtml += `
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/70 p-2.5 rounded-xl border border-cardBorder/60 text-xs gap-2">
-                            <span class="font-bold text-white"><i class="fa-solid fa-check text-indigo-400 mr-1.5"></i>${ex.name}</span>
+                            <span class="font-bold text-white"><i class="fa-solid fa-check text-indigo-400 mr-1.5"></i>${escapeHtml(ex.name)}${ex.variation ? ` <span class="font-normal text-indigo-300">- ${escapeHtml(ex.variation)}</span>` : ''}</span>
                             <div class="flex items-center gap-2 text-slate-300">
-                                <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder">Reps: <strong>${ex.reps}</strong></span>
-                                <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-slate-400">Load: <strong>${ex.weight}</strong></span>
-                                ${ex.minutes ? `<span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-cyan-300">Time: <strong>${ex.minutes} min</strong></span>` : ''}
+                                ${ex.reps ? `<span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder">Reps: <strong>${escapeHtml(ex.reps)}</strong></span>` : ''}
+                                <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-slate-400">Load: <strong>${escapeHtml(ex.weight || 'Bodyweight')}</strong></span>
+                                ${formatDuration(ex) ? `<span class="bg-slate-950 px-2 py-0.5 rounded-md border border-cardBorder text-cyan-300">Time: <strong>${formatDuration(ex)}</strong></span>` : ''}
                             </div>
                         </div>
                     `;
@@ -1537,7 +1653,7 @@
                 card.innerHTML = `
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-cardBorder gap-2">
                         <div class="flex items-center gap-3">
-                            <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-600/20">${session.category} Day</span>
+                            <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-600/20">${escapeHtml(session.category)} Day</span>
                             <span class="text-xs font-semibold text-slate-300"><i class="fa-regular fa-calendar mr-1.5 text-slate-400"></i>${formatDisplayDate(session.date)}</span>
                         </div>
                         <div class="flex items-center gap-3">
@@ -1550,8 +1666,8 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2 text-xs">
-                        ${session.minutes ? `<span class="bg-cyan-950/60 text-cyan-300 px-2.5 py-1 rounded-lg border border-cyan-800/60"><i class="fa-regular fa-clock mr-1"></i>Session time: ${session.minutes} min</span>` : ''}
-                        ${session.totalReps ? `<span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-800/60"><i class="fa-solid fa-repeat mr-1"></i>Total reps: ${session.totalReps}</span>` : ''}
+                        ${formatDuration(session) ? `<span class="bg-cyan-950/60 text-cyan-300 px-2.5 py-1 rounded-lg border border-cyan-800/60"><i class="fa-regular fa-clock mr-1"></i>Session time: ${formatDuration(session)}</span>` : ''}
+                        ${session.totalReps ? `<span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-800/60"><i class="fa-solid fa-repeat mr-1"></i>Total reps: ${escapeHtml(session.totalReps)}</span>` : ''}
                     </div>
                     <div class="space-y-1.5">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged Exercises</label>
@@ -1559,7 +1675,8 @@
                     </div>
                     ${session.notes && session.notes !== '-' ? `
                         <div class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-cardBorder/60 mt-2">
-                            <strong class="text-slate-400">Notes:</strong> ${session.notes}
+                            <strong class="text-slate-400">Notes:</strong>
+                            <ul class="list-disc list-inside mt-1 space-y-0.5">${session.notes.split(/\r?\n/).map(note => note.trim()).filter(Boolean).map(note => `<li>${escapeHtml(note)}</li>`).join('')}</ul>
                         </div>
                     ` : ''}
                 `;
@@ -1583,148 +1700,82 @@
             })[character]);
         }
 
-        function getXpTotals() {
-            const earned = appState.skills.reduce((total, skill) =>
-                total + (skill.completed ? Math.max(0, Number(skill.xp) || 0) : 0), 0);
-            const spent = appState.rewards.reduce((total, reward) =>
-                total + (reward.claimed ? Math.max(0, Number(reward.cost) || 0) : 0), 0);
-            return { earned, spent, available: Math.max(0, earned - spent) };
-        }
-
         function renderSkills() {
             if (!document.getElementById('skillsList')) return;
-            const { earned, spent, available } = getXpTotals();
             const completedCount = appState.skills.filter(skill => skill.completed).length;
-            const claimedCount = appState.rewards.filter(reward => reward.claimed).length;
-            const nextReward = appState.rewards
-                .filter(reward => !reward.claimed)
-                .sort((a, b) => Number(a.cost) - Number(b.cost))[0];
-
-            document.getElementById('availableXp').textContent = `${available} XP`;
-            document.getElementById('xpEarnedSummary').textContent = `${earned} earned · ${spent} spent`;
             document.getElementById('skillsCompletedSummary').textContent = `${completedCount} / ${appState.skills.length}`;
-            document.getElementById('rewardsUnlockedSummary').textContent = String(claimedCount);
-            document.getElementById('nextRewardSummary').textContent = nextReward
-                ? `${nextReward.name} · ${nextReward.cost} XP`
-                : 'Add a reward';
 
             const skillsList = document.getElementById('skillsList');
             skillsList.innerHTML = appState.skills.length
                 ? appState.skills.map(skill => `
-                    <div class="flex items-center justify-between gap-3 bg-slate-900/70 border border-cardBorder rounded-xl p-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/70 border border-cardBorder rounded-xl p-3">
                         <div class="min-w-0">
-                            <p class="text-sm font-semibold ${skill.completed ? 'text-emerald-300 line-through' : 'text-white'}">${escapeHtml(skill.name)}</p>
-                            <p class="text-[11px] text-indigo-300">${Math.max(0, Number(skill.xp) || 0)} XP ${skill.completed ? '· completed' : '· ready to earn'}</p>
+                            <p class="text-sm font-semibold ${skill.completed ? 'text-emerald-300' : 'text-white'}">${escapeHtml(skill.name)}</p>
+                            <p class="text-[11px] text-slate-400">${skill.completed ? 'Completed' : 'In progress'}</p>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            ${skill.completed
-                                ? '<span class="text-xs text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Done</span>'
-                                : `<button type="button" data-complete-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-xs font-bold text-white">Complete</button>
-                                   <button type="button" data-delete-skill="${escapeHtml(skill.id)}" aria-label="Delete ${escapeHtml(skill.name)}" class="p-2 text-slate-400 hover:text-rose-300"><i class="fa-solid fa-trash-can"></i></button>`}
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" data-toggle-skill="${escapeHtml(skill.id)}" class="px-3 py-2 ${skill.completed ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-500'} rounded-lg text-xs font-bold text-white">
+                                <i class="fa-solid ${skill.completed ? 'fa-rotate-left' : 'fa-check'} mr-1"></i>${skill.completed ? 'Undo complete' : 'Mark complete'}
+                            </button>
+                            <button type="button" data-edit-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                            <button type="button" data-delete-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-slate-800 hover:bg-rose-500/20 rounded-lg text-xs font-semibold text-slate-300 hover:text-rose-300"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
                         </div>
                     </div>
                 `).join('')
-                : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add a skill or goal above to start earning XP.</p>';
+                : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add your first skill or goal above.</p>';
 
-            const rewardsList = document.getElementById('rewardsList');
-            rewardsList.innerHTML = appState.rewards.length
-                ? appState.rewards.map(reward => {
-                    const isAffordable = available >= Number(reward.cost);
-                    return `
-                        <div class="flex items-center justify-between gap-3 bg-slate-900/70 border ${reward.claimed ? 'border-emerald-800/60' : 'border-cardBorder'} rounded-xl p-3">
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold ${reward.claimed ? 'text-emerald-300' : 'text-white'}">${escapeHtml(reward.name)}</p>
-                                <p class="text-[11px] ${reward.claimed ? 'text-emerald-400' : 'text-amber-300'}">${reward.cost} XP · ${reward.claimed ? 'unlocked' : isAffordable ? 'ready to unlock' : `${Number(reward.cost) - available} XP to go`}</p>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                ${reward.claimed
-                                    ? '<span class="text-xs text-emerald-300"><i class="fa-solid fa-unlock mr-1"></i>Unlocked</span>'
-                                    : `<button type="button" data-claim-reward="${escapeHtml(reward.id)}" ${isAffordable ? '' : 'disabled'} class="px-3 py-2 ${isAffordable ? 'bg-amber-600 hover:bg-amber-500' : 'bg-slate-700 opacity-60 cursor-not-allowed'} rounded-lg text-xs font-bold text-white">Unlock</button>
-                                       <button type="button" data-delete-reward="${escapeHtml(reward.id)}" aria-label="Delete ${escapeHtml(reward.name)}" class="p-2 text-slate-400 hover:text-rose-300"><i class="fa-solid fa-trash-can"></i></button>`}
-                            </div>
-                        </div>
-                    `;
-                }).join('')
-                : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add a reward you would like to earn. It stays locked until you have enough XP.</p>';
-
-            skillsList.querySelectorAll('[data-complete-skill]').forEach(button => {
-                button.addEventListener('click', () => completeSkill(button.dataset.completeSkill));
+            skillsList.querySelectorAll('[data-toggle-skill]').forEach(button => {
+                button.addEventListener('click', () => toggleSkillCompletion(button.dataset.toggleSkill));
+            });
+            skillsList.querySelectorAll('[data-edit-skill]').forEach(button => {
+                button.addEventListener('click', () => editSkill(button.dataset.editSkill));
             });
             skillsList.querySelectorAll('[data-delete-skill]').forEach(button => {
                 button.addEventListener('click', () => deleteSkill(button.dataset.deleteSkill));
-            });
-            rewardsList.querySelectorAll('[data-claim-reward]').forEach(button => {
-                button.addEventListener('click', () => claimReward(button.dataset.claimReward));
-            });
-            rewardsList.querySelectorAll('[data-delete-reward]').forEach(button => {
-                button.addEventListener('click', () => deleteReward(button.dataset.deleteReward));
             });
         }
 
         function handleAddSkill(event) {
             event.preventDefault();
             const name = document.getElementById('skillName').value.trim();
-            const xp = Number(document.getElementById('skillXp').value);
-            if (!name || !Number.isInteger(xp) || xp < 1 || xp > 10000) {
-                triggerToast('Enter a skill name and an XP amount from 1 to 10,000.');
+            if (!name) {
+                triggerToast('Enter a skill name.');
                 return;
             }
-            appState.skills.push({ id: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, xp, completed: false });
+            appState.skills.push({ id: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, completed: false });
             document.getElementById('skillForm').reset();
-            document.getElementById('skillXp').value = '25';
             saveAllChanges(false);
             renderSkills();
         }
 
-        function completeSkill(id) {
+        function toggleSkillCompletion(id) {
             const skill = appState.skills.find(item => item.id === id);
-            if (!skill || skill.completed) return;
-            skill.completed = true;
-            skill.completedAt = new Date().toISOString();
+            if (!skill) return;
+            skill.completed = !skill.completed;
+            skill.completedAt = skill.completed ? new Date().toISOString() : null;
             saveAllChanges(false);
             renderSkills();
-            triggerToast(`Skill complete! You earned ${skill.xp} XP.`);
+            triggerToast(skill.completed ? 'Skill marked complete.' : 'Skill moved back to in progress.');
+        }
+
+        function editSkill(id) {
+            const skill = appState.skills.find(item => item.id === id);
+            if (!skill) return;
+            const name = prompt('Edit skill or goal:', skill.name);
+            if (name === null) return;
+            if (!name.trim()) {
+                triggerToast('A skill name cannot be empty.');
+                return;
+            }
+            skill.name = name.trim();
+            saveAllChanges(false);
+            renderSkills();
         }
 
         function deleteSkill(id) {
             const skill = appState.skills.find(item => item.id === id);
-            if (!skill || skill.completed) return;
+            if (!skill || !confirm(`Delete the skill "${skill.name}"?`)) return;
             appState.skills = appState.skills.filter(item => item.id !== id);
-            saveAllChanges(false);
-            renderSkills();
-        }
-
-        function handleAddReward(event) {
-            event.preventDefault();
-            const name = document.getElementById('rewardName').value.trim();
-            const cost = Number(document.getElementById('rewardCost').value);
-            if (!name || !Number.isInteger(cost) || cost < 1 || cost > 1000000) {
-                triggerToast('Enter a reward name and an XP cost from 1 to 1,000,000.');
-                return;
-            }
-            appState.rewards.push({ id: `reward-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, cost, claimed: false });
-            document.getElementById('rewardForm').reset();
-            document.getElementById('rewardCost').value = '100';
-            saveAllChanges(false);
-            renderSkills();
-        }
-
-        function claimReward(id) {
-            const reward = appState.rewards.find(item => item.id === id);
-            const { available } = getXpTotals();
-            if (!reward || reward.claimed || available < Number(reward.cost)) return;
-            if (!confirm(`Unlock "${reward.name}" for ${reward.cost} XP?`)) return;
-            reward.claimed = true;
-            reward.claimedAt = new Date().toISOString();
-            saveAllChanges(false);
-            renderSkills();
-            triggerToast(`Reward unlocked: ${reward.name}`);
-        }
-
-        function deleteReward(id) {
-            const reward = appState.rewards.find(item => item.id === id);
-            if (!reward || reward.claimed) return;
-            appState.rewards = appState.rewards.filter(item => item.id !== id);
             saveAllChanges(false);
             renderSkills();
         }
@@ -1826,6 +1877,59 @@
             return match ? `${match[2]}/${match[3]}/${match[1]}` : dateString || '';
         }
 
+        function getDuration(item) {
+            if (item && item.timeValue !== undefined && item.timeValue !== null && item.timeValue !== '') {
+                return { value: Number(item.timeValue), unit: item.timeUnit === 'seconds' ? 'seconds' : 'minutes' };
+            }
+            return { value: Number(item && item.minutes) || 0, unit: 'minutes' };
+        }
+
+        function formatDuration(item) {
+            const duration = getDuration(item);
+            if (!duration.value) return '';
+            const unit = duration.unit === 'seconds' ? 'sec' : 'min';
+            return `${duration.value} ${unit}`;
+        }
+
+        function getWeekStartDate(dateString) {
+            const [year, month, day] = String(dateString || '').split('-').map(Number);
+            if (!year || !month || !day) return '';
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+            return formatDateLocal(date);
+        }
+
+        function populateLogWeekFilter() {
+            const select = document.getElementById('logWeekFilter');
+            const weeks = [...new Set(appState.workoutSessions.map(session => getWeekStartDate(session.date)).filter(Boolean))]
+                .sort((a, b) => b.localeCompare(a));
+            const options = ['<option value="all">All weeks</option>', ...weeks.map(weekStart => {
+                const weekEnd = new Date(`${weekStart}T12:00:00`);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                return `<option value="${weekStart}">Week of ${formatDisplayDate(weekStart)} – ${formatDisplayDate(formatDateLocal(weekEnd))}</option>`;
+            })];
+            select.innerHTML = options.join('');
+            select.value = activeLogWeekFilter;
+            if (select.value !== activeLogWeekFilter) {
+                activeLogWeekFilter = 'all';
+                select.value = 'all';
+            }
+        }
+
+        function handleLogWeekFilterChange() {
+            activeLogWeekFilter = document.getElementById('logWeekFilter').value;
+            activeLogDateFilter = null;
+            renderWorkoutSessions();
+        }
+
+        function clearLogFilters() {
+            activeLogDateFilter = null;
+            activeLogWeekFilter = 'all';
+            document.getElementById('logWeekFilter').value = 'all';
+            document.getElementById('logCategoryFilter').value = 'all';
+            renderWorkoutSessions();
+        }
+
         function renderWeeklyProgress() {
             const container = document.getElementById('weeklyProgressContainer');
             if (!container) return;
@@ -1905,6 +2009,8 @@
 
         function openLogbookFilter(category, date) {
             activeLogDateFilter = date;
+            activeLogWeekFilter = 'all';
+            document.getElementById('logWeekFilter').value = 'all';
             document.getElementById('logCategoryFilter').value = category;
             switchTab('tracker');
             renderWorkoutSessions();
@@ -1999,6 +2105,27 @@
             activeScheduleDateStr = dateStr;
             document.getElementById('scheduleDateStr').value = dateStr;
             document.getElementById('scheduleDateLabel').textContent = formatDisplayDate(dateStr);
+            const completedSessions = appState.workoutSessions.filter(session => session.date === dateStr);
+            const completedList = document.getElementById('calendarCompletedSessions');
+            completedList.classList.toggle('hidden', completedSessions.length === 0);
+            completedList.innerHTML = completedSessions.length
+                ? `<p class="text-xs font-bold text-slate-300">Completed workouts (${completedSessions.length})</p>
+                   ${completedSessions.map(session => `
+                       <div class="flex items-center justify-between gap-2 bg-slate-900 rounded-lg border border-cardBorder p-2">
+                           <div class="min-w-0">
+                               <p class="text-xs font-semibold text-emerald-300">${escapeHtml(session.category)} · ${escapeHtml(session.exercises?.length || 0)} exercise(s)</p>
+                               <p class="text-[10px] text-slate-400 truncate">${(session.exercises || []).map(exercise => escapeHtml(exercise.variation ? `${exercise.name} - ${exercise.variation}` : exercise.name)).join(', ') || 'No exercise details'}</p>
+                           </div>
+                           <button type="button" data-edit-calendar-session="${escapeHtml(session.id)}" class="shrink-0 px-2.5 py-1.5 bg-slate-800 hover:bg-indigo-600/30 rounded-lg text-[11px] font-semibold text-indigo-300">View / edit</button>
+                       </div>
+                   `).join('')}`
+                : '';
+            completedList.querySelectorAll('[data-edit-calendar-session]').forEach(button => {
+                button.addEventListener('click', () => {
+                    closeScheduleModal();
+                    openEditSessionModal(button.dataset.editCalendarSession);
+                });
+            });
 
             const existing = appState.calendarSchedule[dateStr];
             if (existing) {
@@ -2011,6 +2138,13 @@
                 document.getElementById('deleteScheduleBtn').classList.add('hidden');
             }
             document.getElementById('scheduleModal').classList.remove('hidden');
+        }
+
+        function logAnotherWorkoutForDate() {
+            if (!activeScheduleDateStr) return;
+            const date = activeScheduleDateStr;
+            closeScheduleModal();
+            openLogModalForDate(date);
         }
 
         function closeScheduleModal() {
@@ -2051,11 +2185,11 @@
             localStorage.removeItem(STORAGE_KEY);
             loadState();
             activeLogDateFilter = null;
+            activeLogWeekFilter = 'all';
             document.getElementById('logCategoryFilter').value = 'all';
             renderWeeklyProgress();
             renderExercises();
             renderWorkoutSessions();
-            renderWeeklyProgress();
             renderRules();
             renderWarmupRoutine();
             renderSkills();
