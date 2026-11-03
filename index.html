@@ -2052,27 +2052,25 @@
                 cell.className = `rounded-xl border ${borderStyle} p-2 flex flex-col justify-between hover:border-indigo-500/80 cursor-pointer transition-all min-h-[80px]`;
                 cell.onclick = () => openScheduleModal(dateStr);
 
+                const colorMap = {
+                    'Push': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                    'Pull': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                    'Legs': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                    'Core': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                    'Warm-Up': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
+                    'Cardio': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                    'Mobility / Stability': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+                    'Rest': 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                };
                 let badgeHtml = '';
                 if (planned) {
-                    const colorMap = {
-                        'Push': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                        'Pull': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                        'Legs': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                        'Core': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                        'Warm-Up': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-                        'Cardio': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-                        'Mobility / Stability': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-                        'Rest': 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                    };
                     const style = colorMap[planned.category] || 'bg-slate-800 text-slate-300 border-slate-700';
                     badgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}">${planned.category}</span>`;
                 }
 
                 const checkIcon = isCompleted ? `<span class="text-emerald-400 text-xs" title="Logged Session"><i class="fa-solid fa-circle-check"></i></span>` : '';
                 const completedBadges = completedSessions.map(session => {
-                    const style = session.category === 'Warm-Up'
-                        ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
-                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                    const style = colorMap[session.category] || 'bg-slate-800 text-slate-300 border-slate-700';
                     return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}" title="Completed: ${session.category}">${session.category} ✓</span>`;
                 }).join('');
 
