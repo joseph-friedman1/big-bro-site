@@ -178,6 +178,38 @@
                     <!-- Weekly progress wheel and daily details -->
                 </div>
             </div>
+            <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-chart-line text-cyan-400"></i> Total Reps</h2>
+                        <p class="text-xs text-slate-400 mt-1">Track your manually entered session totals over time.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <label class="text-[11px] text-slate-400">Time period
+                            <select id="repTrendRange" onchange="renderRepTrend()" class="block mt-1 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white">
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                                <option value="3months">3 months</option>
+                                <option value="6months">6 months</option>
+                            </select>
+                        </label>
+                        <label class="text-[11px] text-slate-400">Discipline
+                            <select id="repTrendCategory" onchange="renderRepTrend()" class="block mt-1 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white">
+                                <option value="all">All disciplines</option>
+                                <option value="Push">Push</option>
+                                <option value="Pull">Pull</option>
+                                <option value="Legs">Legs</option>
+                                <option value="Core">Core</option>
+                                <option value="Cardio">Cardio</option>
+                                <option value="Mobility / Stability">Mobility / Stability</option>
+                                <option value="Full Body">Full Body</option>
+                                <option value="Warm-Up">Warm-Up</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div id="repTrendChart" class="min-h-56" role="img" aria-label="Total reps line graph"></div>
+            </div>
         </section>
 
         <!-- TAB: Skills -->
@@ -221,7 +253,7 @@
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </span>
-                    <input type="text" id="exerciseSearch" oninput="renderExercises()" placeholder="Search exercise or standard..." 
+                    <input type="search" id="exerciseSearch" oninput="renderExercises()" placeholder="Search exercises, variations, or targets..."
                            class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs focus:outline-none focus:border-accent text-white placeholder-slate-500">
                 </div>
                 <div class="flex flex-wrap gap-1.5 w-full lg:w-auto items-center justify-between">
@@ -274,6 +306,7 @@
                         <option value="Core">Core</option>
                         <option value="Cardio">Cardio</option>
                         <option value="Mobility / Stability">Mobility / Stability</option>
+                        <option value="Full Body">Full Body</option>
                     </select>
                     <select id="logWeekFilter" onchange="handleLogWeekFilterChange()" aria-label="Filter by week" class="w-full sm:w-56 px-3.5 py-2 bg-slate-950 border border-cardBorder rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-accent">
                         <option value="all">All weeks</option>
@@ -382,11 +415,12 @@
                         <option value="Core">Core</option>
                         <option value="Cardio">Cardio</option>
                         <option value="Mobility / Stability">Mobility / Stability</option>
+                        <option value="Full Body">Full Body</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Standard / Target</label>
-                    <textarea id="modalExStandard" rows="3" required placeholder="Describe reps, load, or standard..." class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Standard / Target (one item per line)</label>
+                    <textarea id="modalExStandard" rows="3" required placeholder="Example:&#10;10 controlled reps&#10;Full range of motion" class="w-full px-3.5 py-2.5 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent"></textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Variations (comma separated)</label>
@@ -452,6 +486,7 @@
                             <option value="Core">Core</option>
                             <option value="Cardio">Cardio</option>
                             <option value="Mobility / Stability">Mobility / Stability</option>
+                            <option value="Full Body">Full Body</option>
                         </select>
                     </div>
                 </div>
@@ -491,7 +526,7 @@
 
                 <div class="border-t border-cardBorder pt-3">
                     <label for="sessionTotalReps" class="block text-xs font-semibold text-slate-400 uppercase mb-1">Total Reps for Session (manual)</label>
-                    <input type="text" id="sessionTotalReps" placeholder="Enter your session total" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
+                    <input type="text" inputmode="numeric" id="sessionTotalReps" placeholder="e.g. 120" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-cardBorder">
@@ -553,6 +588,7 @@
                         <option value="Core">Core</option>
                         <option value="Cardio">Cardio</option>
                         <option value="Mobility / Stability">Mobility / Stability</option>
+                        <option value="Full Body">Full Body</option>
                         <option value="Rest">Rest Day</option>
                     </select>
                 </div>
@@ -630,7 +666,10 @@
 
             // Mobility / Stability
             { id: 'stab-1', name: 'Seated Good Morning', category: 'Mobility / Stability', standard: 'ATG standard: 50% BW on back, chest to bench, zero lumbar rounding.', videoUrl: '' },
-            { id: 'stab-2', name: 'Elephant Walk', category: 'Mobility / Stability', standard: '30 reps per leg with palms flat or fingertips touching floor.', videoUrl: '' }
+            { id: 'stab-2', name: 'Elephant Walk', category: 'Mobility / Stability', standard: '30 reps per leg with palms flat or fingertips touching floor.', videoUrl: '' },
+
+            // Full Body
+            { id: 'full-body', name: 'Full Body Workout', category: 'Full Body', standard: 'Choose Full Body as your session category to log exercises from every training discipline.', videoUrl: '' }
         ];
 
         const DEFAULT_WARMUP_ROUTINE = DEFAULT_EXERCISES
@@ -820,6 +859,7 @@
 
         function applySavedState(parsed) {
             appState.exercises = Array.isArray(parsed.exercises) ? parsed.exercises : [...DEFAULT_EXERCISES];
+            ensureFullBodyExercise();
             appState.videoLinks = parsed.videoLinks && typeof parsed.videoLinks === 'object' ? parsed.videoLinks : {};
             appState.workoutSessions = Array.isArray(parsed.workoutSessions) ? parsed.workoutSessions : [];
             appState.rules = Array.isArray(parsed.rules) ? parsed.rules : [...DEFAULT_RULES];
@@ -830,6 +870,13 @@
                 ? parsed.warmupRoutine
                 : buildWarmupRoutine(appState.exercises);
             appState.skills = normalizeSkills(parsed.skills);
+        }
+
+        function ensureFullBodyExercise() {
+            if (!appState.exercises.some(exercise => exercise.id === 'full-body')) {
+                const fullBodyExercise = DEFAULT_EXERCISES.find(exercise => exercise.id === 'full-body');
+                if (fullBodyExercise) appState.exercises.push({ ...fullBodyExercise });
+            }
         }
 
         async function loadCloudState(userId) {
@@ -927,6 +974,7 @@
                 try {
                     const parsed = JSON.parse(raw);
                     appState.exercises = Array.isArray(parsed.exercises) ? parsed.exercises : [...DEFAULT_EXERCISES];
+                    ensureFullBodyExercise();
                     appState.videoLinks = parsed.videoLinks || {};
                     appState.workoutSessions = parsed.workoutSessions || [];
                     appState.rules = parsed.rules || DEFAULT_RULES;
@@ -1078,7 +1126,7 @@
         }
 
         // --- Category Filters & Directory ---
-        const CATEGORIES = ['Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability'];
+        const CATEGORIES = ['Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability', 'Full Body'];
 
         function renderCategoryFilterButtons() {
             const container = document.getElementById('categoryFilterButtons');
@@ -1124,7 +1172,8 @@
             const filtered = appState.exercises.filter(ex => {
                 if (ex.category === 'Warm-Up') return false;
                 const matchesCat = currentDayFilter === 'all' || ex.category === currentDayFilter;
-                const matchesQuery = ex.name.toLowerCase().includes(query) || ex.standard.toLowerCase().includes(query);
+                const searchableText = [ex.name, ex.category, ex.standard, ...(ex.variations || [])].join(' ').toLowerCase();
+                const matchesQuery = searchableText.includes(query);
                 return matchesCat && matchesQuery;
             });
 
@@ -1183,9 +1232,10 @@
                         </div>
                         <h3 class="font-bold text-white text-base leading-snug">${ex.name}</h3>
                         ${(ex.variations || []).length ? `<p class="text-[11px] text-indigo-300">Variations: ${ex.variations.map(escapeHtml).join(', ')}</p>` : ''}
-                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3 rounded-xl border border-cardBorder/80">
-                            <strong class="text-slate-400 uppercase text-[10px] block mb-0.5">Standard / Target:</strong> ${ex.standard}
-                        </p>
+                        <div class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3 rounded-xl border border-cardBorder/80">
+                            <strong class="text-slate-400 uppercase text-[10px] block mb-1">Standard / Target:</strong>
+                            ${renderStandardList(ex.standard)}
+                        </div>
                     </div>
                     <div class="pt-4 border-t border-cardBorder/80 mt-3 space-y-1.5">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase">YouTube Link</label>
@@ -1392,8 +1442,7 @@
             const rowId = 'row-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
             const category = document.getElementById('sessionCategory').value;
             const optionsHtml = getExerciseOptionsHtml(category);
-            const variationOptionsHtml = (exercise && appState.exercises.find(item =>
-                item.name === exercise.name && item.category === category)?.variations || [])
+            const variationOptionsHtml = (exercise && findExerciseForSession(exercise.name, category)?.variations || [])
                 .map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
 
             const rowDiv = document.createElement('div');
@@ -1402,7 +1451,7 @@
             rowDiv.innerHTML = `
                 <div class="w-full md:flex-1">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Search exercise</label>
-                    <input type="text" list="${rowId}-exercise-options" class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent" placeholder="Type to find an exercise">
+                    <input type="search" list="${rowId}-exercise-options" aria-label="Search exercises" class="session-ex-name w-full px-3 py-1.5 bg-slate-950 border border-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-accent" placeholder="Type to find an exercise">
                     <datalist id="${rowId}-exercise-options">${optionsHtml}</datalist>
                 </div>
                 <div class="w-full md:flex-1">
@@ -1440,8 +1489,7 @@
             container.appendChild(comparison);
             const nameInput = rowDiv.querySelector('.session-ex-name');
             nameInput.addEventListener('change', () => {
-                const selectedExercise = appState.exercises.find(item =>
-                    item.name === nameInput.value && item.category === document.getElementById('sessionCategory').value);
+                const selectedExercise = findExerciseForSession(nameInput.value, document.getElementById('sessionCategory').value);
                 rowDiv.querySelector(`#${rowId}-variation-options`).innerHTML =
                     (selectedExercise?.variations || []).map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
                 updatePreviousExerciseHint(rowDiv);
@@ -1460,9 +1508,14 @@
 
         function getExerciseOptionsHtml(category) {
             return appState.exercises
-                .filter(exercise => exercise.category === category)
+                .filter(exercise => category === 'Full Body' || exercise.category === category)
                 .map(exercise => `<option value="${escapeHtml(exercise.name)}"></option>`)
                 .join('');
+        }
+
+        function findExerciseForSession(name, category) {
+            return appState.exercises.find(exercise => exercise.name === name
+                && (category === 'Full Body' || exercise.category === category));
         }
 
         function refreshExerciseOptionsForCategory() {
@@ -1470,8 +1523,7 @@
             document.querySelectorAll('#modalExerciseRowsContainer > div[id^="row-"]').forEach(row => {
                 const exerciseName = row.querySelector('.session-ex-name').value.trim();
                 row.querySelector(`#${row.id}-exercise-options`).innerHTML = getExerciseOptionsHtml(category);
-                const selectedExercise = appState.exercises.find(exercise =>
-                    exercise.name === exerciseName && exercise.category === category);
+                const selectedExercise = findExerciseForSession(exerciseName, category);
                 row.querySelector(`#${row.id}-variation-options`).innerHTML =
                     (selectedExercise?.variations || []).map(variation => `<option value="${escapeHtml(variation)}"></option>`).join('');
             });
@@ -1711,6 +1763,16 @@
         function renderWarmupRoutine() {
             const input = document.getElementById('warmupRoutine');
             if (input) input.value = appState.warmupRoutine || '';
+        }
+
+        function renderStandardList(standard) {
+            const items = String(standard || '')
+                .split(/\r?\n/)
+                .map(item => item.trim())
+                .filter(Boolean);
+            return items.length
+                ? `<ul class="list-disc list-inside space-y-0.5">${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+                : '<span class="text-slate-500">No target set.</span>';
         }
 
         function escapeHtml(value) {
@@ -1955,7 +2017,10 @@
 
         function renderWeeklyProgress() {
             const container = document.getElementById('weeklyProgressContainer');
-            if (!container) return;
+            if (!container) {
+                renderRepTrend();
+                return;
+            }
 
             const today = new Date();
             const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -2028,6 +2093,96 @@
                     openLogbookFilter(session.category, session.date);
                 });
             });
+            renderRepTrend();
+        }
+
+        function parseTotalReps(value) {
+            const normalized = String(value || '').trim().replace(/,/g, '');
+            const match = /^(\d+(?:\.\d+)?)(?:\s*reps?)?$/i.exec(normalized);
+            if (!match) return null;
+            const total = Number(match[1]);
+            return Number.isFinite(total) ? total : null;
+        }
+
+        function renderRepTrend() {
+            const chart = document.getElementById('repTrendChart');
+            if (!chart) return;
+
+            const range = document.getElementById('repTrendRange').value;
+            const category = document.getElementById('repTrendCategory').value;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const rangeDays = { week: 7, month: 30, '3months': 90, '6months': 180 }[range] || 7;
+            const startDate = new Date(today);
+            startDate.setDate(today.getDate() - rangeDays + 1);
+            const weeklyBuckets = range === '3months' || range === '6months';
+            const firstBucket = new Date(startDate);
+            if (weeklyBuckets) firstBucket.setDate(startDate.getDate() - ((startDate.getDay() + 6) % 7));
+
+            const buckets = [];
+            for (let cursor = new Date(firstBucket); cursor <= today; cursor.setDate(cursor.getDate() + (weeklyBuckets ? 7 : 1))) {
+                buckets.push({ date: formatDateLocal(cursor), total: 0, hasData: false });
+            }
+
+            appState.workoutSessions.forEach(session => {
+                if (category !== 'all' && session.category !== category) return;
+                const reps = parseTotalReps(session.totalReps);
+                if (reps === null || session.date < formatDateLocal(startDate) || session.date > formatDateLocal(today)) return;
+                const sessionDate = new Date(`${session.date}T12:00:00`);
+                if (weeklyBuckets) sessionDate.setDate(sessionDate.getDate() - ((sessionDate.getDay() + 6) % 7));
+                const bucket = buckets.find(item => item.date === formatDateLocal(sessionDate));
+                if (bucket) {
+                    bucket.total += reps;
+                    bucket.hasData = true;
+                }
+            });
+
+            if (!buckets.some(bucket => bucket.hasData)) {
+                chart.innerHTML = '<p class="py-12 text-center text-sm text-slate-400">No numeric session rep totals for this period. Enter a total in the workout log to start tracking.</p>';
+                return;
+            }
+
+            const width = 760;
+            const height = 280;
+            const padding = { top: 18, right: 20, bottom: 42, left: 52 };
+            const plotWidth = width - padding.left - padding.right;
+            const plotHeight = height - padding.top - padding.bottom;
+            const maxTotal = Math.max(...buckets.map(bucket => bucket.total), 1);
+            const tickStep = Math.max(1, Math.ceil(maxTotal / 4));
+            const yMax = tickStep * 4;
+            const xFor = index => padding.left + (buckets.length === 1 ? plotWidth / 2 : index * plotWidth / (buckets.length - 1));
+            const yFor = total => padding.top + plotHeight - total / yMax * plotHeight;
+            const gridLines = Array.from({ length: 5 }, (_, index) => {
+                const value = yMax - index * tickStep;
+                const y = yFor(value);
+                return `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#334155" stroke-width="1"/>
+                        <text x="${padding.left - 8}" y="${y + 4}" fill="#94a3b8" font-size="10" text-anchor="end">${value}</text>`;
+            }).join('');
+            const points = buckets.map((bucket, index) => `${xFor(index)},${yFor(bucket.total)}`).join(' ');
+            const pointMarks = buckets.map((bucket, index) => {
+                const x = xFor(index);
+                const y = yFor(bucket.total);
+                return `<circle cx="${x}" cy="${y}" r="3.5" fill="#22d3ee"><title>${formatDisplayDate(bucket.date)}: ${Math.round(bucket.total)} reps</title></circle>`;
+            }).join('');
+            const labelInterval = buckets.length > 14 ? Math.ceil(buckets.length / 7) : 1;
+            const labels = buckets.map((bucket, index) => {
+                if (index % labelInterval !== 0 && index !== buckets.length - 1) return '';
+                const label = weeklyBuckets
+                    ? formatDisplayDate(bucket.date).slice(0, 5)
+                    : range === 'week'
+                        ? new Date(`${bucket.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short' })
+                        : formatDisplayDate(bucket.date).slice(0, 5);
+                return `<text x="${xFor(index)}" y="${height - 12}" fill="#94a3b8" font-size="10" text-anchor="middle">${label}</text>`;
+            }).join('');
+            chart.innerHTML = `
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-auto" role="img" aria-label="Total reps line graph">
+                    ${gridLines}
+                    <polyline points="${points}" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    ${pointMarks}
+                    ${labels}
+                </svg>
+                <p class="text-[11px] text-slate-400 text-right">${weeklyBuckets ? 'Weekly total' : 'Daily total'} · ${category === 'all' ? 'All disciplines' : escapeHtml(category)}</p>
+            `;
         }
 
         function openLogbookFilter(category, date) {
@@ -2083,6 +2238,7 @@
                     'Warm-Up': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
                     'Cardio': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
                     'Mobility / Stability': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+                    'Full Body': 'bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30',
                     'Rest': 'bg-rose-500/20 text-rose-400 border-rose-500/30'
                 };
                 let badgeHtml = '';
