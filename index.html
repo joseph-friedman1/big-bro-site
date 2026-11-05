@@ -113,13 +113,13 @@
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
                 <nav id="appNav" class="no-scrollbar flex bg-slate-900/80 p-1 rounded-xl border border-cardBorder text-xs font-semibold">
                     <button onclick="switchTab('weekly')" id="nav-weekly" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-chart-pie mr-1.5"></i>Weekly
+                        <i class="fa-solid fa-house mr-1.5"></i>Home
+                    </button>
+                    <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
+                        <i class="fa-solid fa-book-open mr-1.5"></i>Library
                     </button>
                     <button onclick="switchTab('skills')" id="nav-skills" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
                         <i class="fa-solid fa-gamepad mr-1.5"></i>Skills
-                    </button>
-                    <button onclick="switchTab('program')" id="nav-program" class="px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md">
-                        <i class="fa-solid fa-list-check mr-1.5"></i>Directory
                     </button>
                     <button onclick="switchTab('tracker')" id="nav-tracker" class="px-3 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
                         <i class="fa-solid fa-chart-line mr-1.5"></i>Logbook
@@ -132,9 +132,9 @@
                     </button>
                 </nav>
                 <select id="mobileNavSelect" aria-label="Choose section" onchange="switchTab(this.value)" class="hidden w-full rounded-xl border border-cardBorder bg-slate-900 px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-accent">
-                    <option value="weekly">Weekly Progress</option>
+                    <option value="weekly">Home</option>
+                    <option value="program">Library</option>
                     <option value="skills">Skills</option>
-                    <option value="program">Exercise Directory</option>
                     <option value="tracker">Workout Logbook</option>
                     <option value="calendar">Calendar</option>
                     <option value="rules">Rules & Standards</option>
@@ -173,7 +173,7 @@
             <div class="bg-cardBg p-6 rounded-2xl border border-cardBorder shadow-sm space-y-6">
                 <div>
                     <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-accent"></i> Weekly Workout Progress
+                    <i class="fa-solid fa-chart-pie text-accent"></i> Home — Weekly Workout Progress
                     </h2>
                     <p class="text-xs text-slate-400 mt-1">Each slice is a weekday with a completed workout. Rest days do not count.</p>
                 </div>
@@ -238,7 +238,11 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="flex gap-2 border-b border-cardBorder" role="tablist" aria-label="Skills sections">
+                <button id="skillsPanelButton" type="button" role="tab" aria-selected="true" onclick="switchSkillsPanel('skills')" class="px-4 py-3 text-sm font-bold text-white border-b-2 border-indigo-400">Skills</button>
+                <button id="notesPanelButton" type="button" role="tab" aria-selected="false" onclick="switchSkillsPanel('notes')" class="px-4 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-white">Notes & Stretches</button>
+            </div>
+            <div id="skillsPanel" role="tabpanel" class="space-y-4">
                 <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
                     <div>
                         <h3 class="text-lg font-bold text-white">My Skills</h3>
@@ -249,12 +253,31 @@
                         <textarea id="skillMilestones" rows="3" placeholder="Add one build-up goal per line (optional):&#10;10 pull-ups&#10;20 straight-bar dips" class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent"></textarea>
                         <button type="submit" class="w-full sm:w-auto min-h-11 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold text-white"><i class="fa-solid fa-plus mr-1"></i>Add skill plan</button>
                     </form>
-                    <div id="skillsList" class="space-y-2"></div>
                 </div>
+                <div id="skillsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            </div>
+            <div id="skillNotesPanel" role="tabpanel" class="hidden space-y-4">
+                <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Notes & Stretches</h3>
+                        <p class="text-xs text-slate-400 mt-1">Save stretch routines, training reminders, and other useful notes. Add a YouTube link when it helps.</p>
+                    </div>
+                    <form id="skillNoteForm" onsubmit="handleSaveSkillNote(event)" class="space-y-3">
+                        <input id="skillNoteId" type="hidden">
+                        <input id="skillNoteTitle" type="text" maxlength="100" required placeholder="Title (e.g. Shoulder stretch routine)" class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <textarea id="skillNoteContent" rows="5" maxlength="5000" required placeholder="Add stretches, steps, reminders, or other notes..." class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent"></textarea>
+                        <input id="skillNoteYoutube" type="url" placeholder="YouTube link (optional)" aria-label="YouTube link (optional)" class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <div class="flex gap-2">
+                            <button id="saveSkillNoteButton" type="submit" class="min-h-11 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold text-white"><i class="fa-solid fa-plus mr-1"></i>Save note</button>
+                            <button id="cancelSkillNoteEditButton" type="button" onclick="resetSkillNoteForm()" class="hidden min-h-11 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-200">Cancel edit</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="skillNotesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
             </div>
         </section>
 
-        <!-- TAB 1: Exercise Directory & Video Library -->
+        <!-- TAB 1: Exercise Library & Video Collection -->
         <section id="tab-program" class="space-y-6">
             <!-- Search & Category Filters -->
             <div class="flex flex-col lg:flex-row gap-4 justify-between items-center bg-cardBg p-4 rounded-2xl border border-cardBorder shadow-sm">
@@ -734,7 +757,8 @@
             categoryColors: { ...DEFAULT_CATEGORY_COLORS },
             deloadWeeks: {},
             warmupRoutine: DEFAULT_WARMUP_ROUTINE,
-            skills: []
+            skills: [],
+            skillNotes: []
         };
 
         let currentDayFilter = 'all';
@@ -748,6 +772,7 @@
         let activeLogDateFilter = null;
         let activeLogWeekFilter = 'all';
         let exerciseReorderMode = false;
+        let activeSkillsPanel = 'skills';
         let progressWeekStart = getWeekStartDate(formatDateLocal(new Date()));
 
         // Initialize Application State
@@ -924,6 +949,22 @@
                 ? parsed.warmupRoutine
                 : buildWarmupRoutine(appState.exercises);
             appState.skills = normalizeSkills(parsed.skills);
+            appState.skillNotes = normalizeSkillNotes(parsed.skillNotes);
+        }
+
+        function normalizeSkillNotes(notes) {
+            if (!Array.isArray(notes)) return [];
+            return notes
+                .filter(note => note && typeof note === 'object' && typeof note.title === 'string' && note.title.trim())
+                .map(note => ({
+                    id: typeof note.id === 'string' && note.id
+                        ? note.id
+                        : `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                    title: note.title.trim(),
+                    content: typeof note.content === 'string' ? note.content : '',
+                    youtubeUrl: typeof note.youtubeUrl === 'string' ? note.youtubeUrl : '',
+                    updatedAt: typeof note.updatedAt === 'string' ? note.updatedAt : ''
+                }));
         }
 
         function normalizeCategoryColors(colors) {
@@ -1050,6 +1091,7 @@
                         ? parsed.warmupRoutine
                         : buildWarmupRoutine(appState.exercises);
                     appState.skills = normalizeSkills(parsed.skills);
+                    appState.skillNotes = normalizeSkillNotes(parsed.skillNotes);
                     return;
                 } catch(e) {
                     console.error("Error parsing storage state:", e);
@@ -1068,6 +1110,7 @@
             appState.deloadWeeks = {};
             appState.warmupRoutine = DEFAULT_WARMUP_ROUTINE;
             appState.skills = [];
+            appState.skillNotes = [];
             saveAllChanges(false);
         }
 
@@ -1196,7 +1239,22 @@
             if (mobileNav) mobileNav.value = tabId;
         }
 
-        // --- Category Filters & Directory ---
+        function switchSkillsPanel(panel) {
+            activeSkillsPanel = panel === 'notes' ? 'notes' : 'skills';
+            const showNotes = activeSkillsPanel === 'notes';
+            document.getElementById('skillsPanel').classList.toggle('hidden', showNotes);
+            document.getElementById('skillNotesPanel').classList.toggle('hidden', !showNotes);
+            document.getElementById('skillsPanelButton').className = showNotes
+                ? 'px-4 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-white'
+                : 'px-4 py-3 text-sm font-bold text-white border-b-2 border-indigo-400';
+            document.getElementById('notesPanelButton').className = showNotes
+                ? 'px-4 py-3 text-sm font-bold text-white border-b-2 border-indigo-400'
+                : 'px-4 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-white';
+            document.getElementById('skillsPanelButton').setAttribute('aria-selected', String(!showNotes));
+            document.getElementById('notesPanelButton').setAttribute('aria-selected', String(showNotes));
+        }
+
+        // --- Category Filters & Exercise Library ---
         const CATEGORIES = ['Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability', 'Full Body'];
 
         function renderCategoryFilterButtons() {
@@ -1815,10 +1873,13 @@
                         ${formatDuration(session) ? `<span class="bg-cyan-950/60 text-cyan-300 px-2.5 py-1 rounded-lg border border-cyan-800/60"><i class="fa-regular fa-clock mr-1"></i>Session time: ${formatDuration(session)}</span>` : ''}
                         ${session.totalReps ? `<span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-800/60"><i class="fa-solid fa-repeat mr-1"></i>Total reps: ${escapeHtml(session.totalReps)}</span>` : ''}
                     </div>
-                    <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logged Exercises</label>
-                        <div class="space-y-2">${exercisesHtml}</div>
-                    </div>
+                    <details class="rounded-xl border border-cardBorder bg-slate-950/40">
+                        <summary class="min-h-12 cursor-pointer select-none rounded-xl px-3 py-3 text-xs font-bold text-slate-300 hover:bg-slate-900">
+                            <i class="fa-solid fa-list-check mr-2 text-indigo-300"></i>
+                            ${session.exercises?.length || 0} exercise${session.exercises?.length === 1 ? '' : 's'} · Show full workout
+                        </summary>
+                        <div class="space-y-2 border-t border-cardBorder p-3">${exercisesHtml || '<p class="text-xs text-slate-500">No exercises logged in this session.</p>'}</div>
+                    </details>
                     ${session.notes && session.notes !== '-' ? `
                         <div class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-cardBorder/60 mt-2">
                             <strong class="text-slate-400">Notes:</strong>
@@ -1926,6 +1987,7 @@
             skillsList.querySelectorAll('[data-delete-skill]').forEach(button => {
                 button.addEventListener('click', () => deleteSkill(button.dataset.deleteSkill));
             });
+            renderSkillNotes();
         }
 
         function handleAddSkill(event) {
@@ -2039,6 +2101,117 @@
             appState.skills = appState.skills.filter(item => item.id !== id);
             saveAllChanges(false);
             renderSkills();
+        }
+
+        function normalizeYoutubeUrl(value) {
+            const trimmed = String(value || '').trim();
+            if (!trimmed) return '';
+            try {
+                const url = new URL(trimmed);
+                const host = url.hostname.toLowerCase();
+                const isYoutube = host === 'youtu.be'
+                    || host.endsWith('.youtu.be')
+                    || host === 'youtube.com'
+                    || host.endsWith('.youtube.com');
+                return url.protocol === 'https:' && isYoutube ? url.href : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function renderSkillNotes() {
+            const container = document.getElementById('skillNotesList');
+            if (!container) return;
+            container.innerHTML = appState.skillNotes.length
+                ? appState.skillNotes.map(note => {
+                    const youtubeUrl = normalizeYoutubeUrl(note.youtubeUrl);
+                    const lines = note.content.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+                    return `
+                        <article class="bg-cardBg border border-cardBorder rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="font-bold text-white text-base leading-snug">${escapeHtml(note.title)}</h3>
+                                <div class="flex gap-1 shrink-0">
+                                    <button type="button" data-edit-skill-note="${escapeHtml(note.id)}" class="min-h-10 min-w-10 rounded-lg bg-slate-800 text-slate-300 hover:text-white" aria-label="Edit ${escapeHtml(note.title)}"><i class="fa-solid fa-pen"></i></button>
+                                    <button type="button" data-delete-skill-note="${escapeHtml(note.id)}" class="min-h-10 min-w-10 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-300" aria-label="Delete ${escapeHtml(note.title)}"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+                            ${lines.length
+                                ? `<ul class="list-disc list-inside space-y-1 text-sm leading-relaxed text-slate-300">${lines.map(line => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`
+                                : '<p class="text-sm text-slate-500">No notes added.</p>'}
+                            ${youtubeUrl
+                                ? `<a href="${escapeHtml(youtubeUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 self-start rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"><i class="fa-brands fa-youtube"></i>Open YouTube video</a>`
+                                : ''}
+                            ${note.updatedAt ? `<p class="mt-auto text-[10px] text-slate-500">Updated ${formatDisplayDate(note.updatedAt.slice(0, 10))}</p>` : ''}
+                        </article>
+                    `;
+                }).join('')
+                : '<p class="col-span-full rounded-xl border border-dashed border-cardBorder bg-slate-900/50 p-4 text-sm text-slate-500">No notes yet. Add a stretch routine or training reminder above.</p>';
+
+            container.querySelectorAll('[data-edit-skill-note]').forEach(button => {
+                button.addEventListener('click', () => editSkillNote(button.dataset.editSkillNote));
+            });
+            container.querySelectorAll('[data-delete-skill-note]').forEach(button => {
+                button.addEventListener('click', () => deleteSkillNote(button.dataset.deleteSkillNote));
+            });
+        }
+
+        function handleSaveSkillNote(event) {
+            event.preventDefault();
+            const id = document.getElementById('skillNoteId').value;
+            const title = document.getElementById('skillNoteTitle').value.trim();
+            const content = document.getElementById('skillNoteContent').value.trim();
+            const rawYoutubeUrl = document.getElementById('skillNoteYoutube').value.trim();
+            const youtubeUrl = normalizeYoutubeUrl(rawYoutubeUrl);
+            if (!title || !content) {
+                triggerToast('Add a title and note content.');
+                return;
+            }
+            if (youtubeUrl === null) {
+                triggerToast('Enter a secure YouTube link (youtube.com or youtu.be).');
+                return;
+            }
+
+            const note = {
+                id: id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                title,
+                content,
+                youtubeUrl,
+                updatedAt: new Date().toISOString()
+            };
+            const existingIndex = appState.skillNotes.findIndex(item => item.id === id);
+            if (existingIndex >= 0) appState.skillNotes[existingIndex] = note;
+            else appState.skillNotes.unshift(note);
+            resetSkillNoteForm();
+            saveAllChanges(false);
+            renderSkillNotes();
+        }
+
+        function editSkillNote(id) {
+            const note = appState.skillNotes.find(item => item.id === id);
+            if (!note) return;
+            document.getElementById('skillNoteId').value = note.id;
+            document.getElementById('skillNoteTitle').value = note.title;
+            document.getElementById('skillNoteContent').value = note.content;
+            document.getElementById('skillNoteYoutube').value = note.youtubeUrl;
+            document.getElementById('saveSkillNoteButton').innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i>Update note';
+            document.getElementById('cancelSkillNoteEditButton').classList.remove('hidden');
+            document.getElementById('skillNoteTitle').focus();
+        }
+
+        function resetSkillNoteForm() {
+            document.getElementById('skillNoteForm').reset();
+            document.getElementById('skillNoteId').value = '';
+            document.getElementById('saveSkillNoteButton').innerHTML = '<i class="fa-solid fa-plus mr-1"></i>Save note';
+            document.getElementById('cancelSkillNoteEditButton').classList.add('hidden');
+        }
+
+        function deleteSkillNote(id) {
+            const note = appState.skillNotes.find(item => item.id === id);
+            if (!note || !confirm(`Delete the note "${note.title}"?`)) return;
+            appState.skillNotes = appState.skillNotes.filter(item => item.id !== id);
+            if (document.getElementById('skillNoteId').value === id) resetSkillNoteForm();
+            saveAllChanges(false);
+            renderSkillNotes();
         }
 
         function handleWarmupRoutineInput(value) {
