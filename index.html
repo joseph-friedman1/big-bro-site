@@ -31,38 +31,33 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #mobileNavSelect { display: none; }
         @media (max-width: 767px) {
-            body { padding-bottom: 5rem; }
-            #appNav {
+            body { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+            #appNav { display: none; }
+            #mobileNavSelect { display: block; }
+            #mobileNavSelect {
                 position: fixed;
                 left: 0;
                 right: 0;
                 bottom: 0;
                 z-index: 45;
                 width: 100%;
-                justify-content: flex-start;
-                overflow-x: auto;
-                border-radius: 0;
-                padding: 0.4rem;
+                min-height: calc(4.5rem + env(safe-area-inset-bottom));
+                padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+                background: #1e293b;
+                border-top: 1px solid #334155;
             }
-            #appNav button {
-                display: flex;
-                flex: 1 0 auto;
-                flex-direction: column;
-                align-items: center;
-                gap: 0.2rem;
-                min-width: 4.25rem;
-                min-height: 2.75rem;
-                padding: 0.5rem 0.4rem;
-                font-size: 0.65rem;
-                white-space: nowrap;
-            }
-            #appNav button i { margin-right: 0 !important; }
             #headerActions { justify-content: center; }
             #syncStatus { order: -1; width: 100%; text-align: center; }
             #appMain { padding-top: 1rem; }
             #logModal > div { padding: 1rem; }
             #modalExerciseRowsContainer > div { align-items: stretch; }
+            #calendarDaysGrid { gap: 0.2rem; }
+            #calendarDaysGrid > div { min-height: 3.75rem; padding: 0.25rem; }
+            #calendarDaysGrid > div span { font-size: 0.65rem; }
+            #calendarDaysGrid > div .calendar-category-badge { font-size: 0.5rem; line-height: 1.1; padding: 0.15rem; }
+            #calendarDaysHeader { gap: 0.2rem; font-size: 0.6rem; }
         }
     </style>
 </head>
@@ -136,6 +131,14 @@
                         <i class="fa-solid fa-book mr-1.5"></i>Rules & Standards
                     </button>
                 </nav>
+                <select id="mobileNavSelect" aria-label="Choose section" onchange="switchTab(this.value)" class="hidden w-full rounded-xl border border-cardBorder bg-slate-900 px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-accent">
+                    <option value="weekly">Weekly Progress</option>
+                    <option value="skills">Skills</option>
+                    <option value="program">Exercise Directory</option>
+                    <option value="tracker">Workout Logbook</option>
+                    <option value="calendar">Calendar</option>
+                    <option value="rules">Rules & Standards</option>
+                </select>
 
                 <!-- Data Controls & Master Save -->
                 <div id="headerActions" class="flex flex-wrap items-center gap-1.5">
@@ -172,7 +175,13 @@
                     <h2 class="text-xl font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-accent"></i> Weekly Workout Progress
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">Each slice is a weekday with a logged workout. Warm-ups and rest days do not count.</p>
+                    <p class="text-xs text-slate-400 mt-1">Each slice is a weekday with a completed workout. Rest days do not count.</p>
+                </div>
+                <div class="flex items-center justify-between gap-3 bg-slate-900 rounded-xl border border-cardBorder p-2">
+                    <button type="button" onclick="changeProgressWeek(-1)" aria-label="Previous week" class="min-h-11 min-w-11 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="weeklySelectedRange" class="text-center text-sm font-bold text-white" aria-live="polite"></span>
+                    <button type="button" onclick="changeProgressWeek(1)" aria-label="Next week" class="min-h-11 min-w-11 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button type="button" onclick="goToCurrentProgressWeek()" class="min-h-11 rounded-lg px-3 bg-indigo-600/20 text-indigo-300 text-xs font-bold">This week</button>
                 </div>
                 <div id="weeklyProgressContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                     <!-- Weekly progress wheel and daily details -->
@@ -203,7 +212,6 @@
                                 <option value="Cardio">Cardio</option>
                                 <option value="Mobility / Stability">Mobility / Stability</option>
                                 <option value="Full Body">Full Body</option>
-                                <option value="Warm-Up">Warm-Up</option>
                             </select>
                         </label>
                     </div>
@@ -218,7 +226,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-gamepad text-indigo-400"></i> Skills & Goals</h2>
-                        <p class="text-xs text-slate-400 mt-1">Add skills or goals and mark them complete as you make progress.</p>
+                        <p class="text-xs text-slate-400 mt-1">Break a skill into smaller goals, check each one off, and track your progress.</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -234,11 +242,12 @@
                 <div class="bg-cardBg p-5 sm:p-6 rounded-2xl border border-cardBorder shadow-sm space-y-4">
                     <div>
                         <h3 class="text-lg font-bold text-white">My Skills</h3>
-                        <p class="text-xs text-slate-400 mt-1">Examples: first pull-up, longer L-sit, or improved mobility.</p>
+                        <p class="text-xs text-slate-400 mt-1">For example, build toward a muscle-up with pull-up and transition practice goals.</p>
                     </div>
-                    <form id="skillForm" onsubmit="handleAddSkill(event)" class="flex gap-2">
-                        <input id="skillName" type="text" maxlength="80" required placeholder="Skill or fitness goal" class="min-w-0 flex-1 px-3 py-2 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
-                        <button type="submit" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-bold text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                    <form id="skillForm" onsubmit="handleAddSkill(event)" class="space-y-2">
+                        <input id="skillName" type="text" maxlength="80" required placeholder="Skill (e.g. Muscle-up)" class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent">
+                        <textarea id="skillMilestones" rows="3" placeholder="Add one build-up goal per line (optional):&#10;10 pull-ups&#10;20 straight-bar dips" class="w-full px-3 py-3 bg-slate-900 border border-cardBorder rounded-xl text-sm text-white focus:outline-none focus:border-accent"></textarea>
+                        <button type="submit" class="w-full sm:w-auto min-h-11 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold text-white"><i class="fa-solid fa-plus mr-1"></i>Add skill plan</button>
                     </form>
                     <div id="skillsList" class="space-y-2"></div>
                 </div>
@@ -299,7 +308,6 @@
                     </div>
                     <select id="logCategoryFilter" onchange="renderWorkoutSessions()" class="w-full sm:w-64 px-3.5 py-2 bg-slate-950 border border-cardBorder rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-accent">
                         <option value="all">All Categories</option>
-                        <option value="Warm-Up">Warm-Up</option>
                         <option value="Push">Push</option>
                         <option value="Pull">Pull</option>
                         <option value="Legs">Legs</option>
@@ -339,7 +347,7 @@
                         </h2>
                         <p class="text-xs text-slate-400 mt-1">Plan target workout categories, schedule rest days, and track completion.</p>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
                         <button onclick="changeMonth(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-cardBorder text-xs transition-all"><i class="fa-solid fa-chevron-left"></i></button>
                         <span id="calendarMonthYear" class="text-sm font-bold text-white min-w-[140px] text-center"></span>
                         <button onclick="changeMonth(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-cardBorder text-xs transition-all"><i class="fa-solid fa-chevron-right"></i></button>
@@ -348,7 +356,7 @@
                 </div>
 
                 <!-- Calendar Days Header -->
-                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-cardBorder">
+                <div id="calendarDaysHeader" class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-cardBorder">
                     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                 </div>
 
@@ -356,6 +364,13 @@
                 <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2">
                     <!-- Dynamically Populated -->
                 </div>
+            </div>
+            <div class="bg-cardBg p-5 rounded-2xl border border-cardBorder shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Workout category colors</h3>
+                    <p class="text-xs text-slate-400 mt-1">Choose a color for each category. Calendar entries and weekly progress use these colors.</p>
+                </div>
+                <div id="calendarCategoryColors" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
             </div>
         </section>
 
@@ -479,7 +494,6 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category / Day</label>
                         <select id="sessionCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
-                            <option value="Warm-Up">Warm-Up</option>
                             <option value="Push">Push</option>
                             <option value="Pull">Pull</option>
                             <option value="Legs">Legs</option>
@@ -581,7 +595,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Category / Day Type</label>
                     <select id="scheduleCategory" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
-                        <option value="Warm-Up">Warm-Up</option>
+                        <option value="">No workout planned</option>
                         <option value="Push">Push</option>
                         <option value="Pull">Pull</option>
                         <option value="Legs">Legs</option>
@@ -596,6 +610,13 @@
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Day Focus / Custom Notes</label>
                     <input type="text" id="scheduleNotes" placeholder="e.g. Focus on deep split squats & ankle mobility" class="w-full px-3.5 py-2 bg-slate-900 border border-cardBorder rounded-xl text-xs text-white focus:outline-none focus:border-accent">
                 </div>
+                <label class="flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 cursor-pointer">
+                    <input type="checkbox" id="deloadWeekToggle" class="mt-1 h-5 w-5 accent-amber-500">
+                    <span>
+                        <span class="block text-sm font-bold text-amber-200">Mark this whole week as a deload</span>
+                        <span class="block text-[11px] text-slate-400 mt-0.5">Adds a deload marker to all seven days of this week.</span>
+                    </span>
+                </label>
                 <div class="flex justify-between items-center pt-2 border-t border-cardBorder">
                     <button type="button" id="deleteScheduleBtn" onclick="handleDeleteSchedule()" class="text-rose-400 hover:text-rose-300 text-xs font-semibold flex items-center gap-1">
                         <i class="fa-solid fa-trash-can"></i> Remove Day Entry
@@ -691,6 +712,18 @@
             { id: 'rule-4', title: 'Honest Logging', desc: 'Track sets, load, and form quality accurately. Rest 2-3 minutes on heavy compound lifts.' }
         ];
 
+        const WORKOUT_CATEGORIES = ['Push', 'Pull', 'Legs', 'Core', 'Cardio', 'Mobility / Stability', 'Full Body', 'Rest'];
+        const DEFAULT_CATEGORY_COLORS = {
+            'Push': '#3b82f6',
+            'Pull': '#10b981',
+            'Legs': '#f59e0b',
+            'Core': '#a855f7',
+            'Cardio': '#06b6d4',
+            'Mobility / Stability': '#6366f1',
+            'Full Body': '#d946ef',
+            'Rest': '#f43f5e'
+        };
+
         // Central State Management
         let appState = {
             exercises: [],
@@ -698,6 +731,8 @@
             workoutSessions: [],
             rules: [],
             calendarSchedule: {},
+            categoryColors: { ...DEFAULT_CATEGORY_COLORS },
+            deloadWeeks: {},
             warmupRoutine: DEFAULT_WARMUP_ROUTINE,
             skills: []
         };
@@ -713,6 +748,7 @@
         let activeLogDateFilter = null;
         let activeLogWeekFilter = 'all';
         let exerciseReorderMode = false;
+        let progressWeekStart = getWeekStartDate(formatDateLocal(new Date()));
 
         // Initialize Application State
         window.onload = function() {
@@ -847,14 +883,28 @@
             if (!Array.isArray(skills)) return [];
             return skills
                 .filter(skill => skill && typeof skill === 'object' && typeof skill.name === 'string' && skill.name.trim())
-                .map(skill => ({
-                    id: typeof skill.id === 'string' && skill.id
-                        ? skill.id
-                        : `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                    name: skill.name.trim(),
-                    completed: Boolean(skill.completed),
-                    completedAt: skill.completedAt || null
-                }));
+                .map(skill => {
+                    const milestones = Array.isArray(skill.milestones)
+                        ? skill.milestones
+                            .filter(milestone => milestone && typeof milestone === 'object' && typeof milestone.name === 'string' && milestone.name.trim())
+                            .map(milestone => ({
+                                id: typeof milestone.id === 'string' && milestone.id
+                                    ? milestone.id
+                                    : `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                                name: milestone.name.trim(),
+                                completed: Boolean(milestone.completed)
+                            }))
+                        : [];
+                    return {
+                        id: typeof skill.id === 'string' && skill.id
+                            ? skill.id
+                            : `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                        name: skill.name.trim(),
+                        completed: Boolean(skill.completed),
+                        completedAt: skill.completedAt || null,
+                        milestones
+                    };
+                });
         }
 
         function applySavedState(parsed) {
@@ -866,10 +916,23 @@
             appState.calendarSchedule = parsed.calendarSchedule && typeof parsed.calendarSchedule === 'object'
                 ? parsed.calendarSchedule
                 : {};
+            appState.categoryColors = normalizeCategoryColors(parsed.categoryColors);
+            appState.deloadWeeks = parsed.deloadWeeks && typeof parsed.deloadWeeks === 'object' && !Array.isArray(parsed.deloadWeeks)
+                ? parsed.deloadWeeks
+                : {};
             appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                 ? parsed.warmupRoutine
                 : buildWarmupRoutine(appState.exercises);
             appState.skills = normalizeSkills(parsed.skills);
+        }
+
+        function normalizeCategoryColors(colors) {
+            const normalized = { ...DEFAULT_CATEGORY_COLORS };
+            if (!colors || typeof colors !== 'object' || Array.isArray(colors)) return normalized;
+            WORKOUT_CATEGORIES.forEach(category => {
+                if (/^#[0-9a-f]{6}$/i.test(colors[category] || '')) normalized[category] = colors[category];
+            });
+            return normalized;
         }
 
         function ensureFullBodyExercise() {
@@ -979,6 +1042,10 @@
                     appState.workoutSessions = parsed.workoutSessions || [];
                     appState.rules = parsed.rules || DEFAULT_RULES;
                     appState.calendarSchedule = parsed.calendarSchedule || {};
+                    appState.categoryColors = normalizeCategoryColors(parsed.categoryColors);
+                    appState.deloadWeeks = parsed.deloadWeeks && typeof parsed.deloadWeeks === 'object' && !Array.isArray(parsed.deloadWeeks)
+                        ? parsed.deloadWeeks
+                        : {};
                     appState.warmupRoutine = typeof parsed.warmupRoutine === 'string'
                         ? parsed.warmupRoutine
                         : buildWarmupRoutine(appState.exercises);
@@ -997,6 +1064,8 @@
             appState.workoutSessions = [];
             appState.rules = [...DEFAULT_RULES];
             appState.calendarSchedule = {};
+            appState.categoryColors = { ...DEFAULT_CATEGORY_COLORS };
+            appState.deloadWeeks = {};
             appState.warmupRoutine = DEFAULT_WARMUP_ROUTINE;
             appState.skills = [];
             saveAllChanges(false);
@@ -1123,6 +1192,8 @@
             const activeNav = document.getElementById(`nav-${tabId}`);
             if (activeTab) activeTab.classList.remove('hidden');
             if (activeNav) activeNav.className = "px-3 py-2 rounded-lg transition-all text-white bg-accent shadow-md";
+            const mobileNav = document.getElementById('mobileNavSelect');
+            if (mobileNav) mobileNav.value = tabId;
         }
 
         // --- Category Filters & Directory ---
@@ -1792,25 +1863,62 @@
 
             const skillsList = document.getElementById('skillsList');
             skillsList.innerHTML = appState.skills.length
-                ? appState.skills.map(skill => `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/70 border border-cardBorder rounded-xl p-3">
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold ${skill.completed ? 'text-emerald-300' : 'text-white'}">${escapeHtml(skill.name)}</p>
-                            <p class="text-[11px] text-slate-400">${skill.completed ? 'Completed' : 'In progress'}</p>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2 shrink-0">
-                            <button type="button" data-toggle-skill="${escapeHtml(skill.id)}" class="px-3 py-2 ${skill.completed ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-500'} rounded-lg text-xs font-bold text-white">
-                                <i class="fa-solid ${skill.completed ? 'fa-rotate-left' : 'fa-check'} mr-1"></i>${skill.completed ? 'Undo complete' : 'Mark complete'}
-                            </button>
-                            <button type="button" data-edit-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
-                            <button type="button" data-delete-skill="${escapeHtml(skill.id)}" class="px-3 py-2 bg-slate-800 hover:bg-rose-500/20 rounded-lg text-xs font-semibold text-slate-300 hover:text-rose-300"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
-                        </div>
-                    </div>
-                `).join('')
+                ? appState.skills.map(skill => {
+                    const milestones = Array.isArray(skill.milestones) ? skill.milestones : [];
+                    const completedMilestones = milestones.filter(milestone => milestone.completed).length;
+                    return `
+                        <article class="bg-slate-900/70 border border-cardBorder rounded-xl p-3 sm:p-4 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h4 class="text-base font-bold ${skill.completed ? 'text-emerald-300' : 'text-white'}">${escapeHtml(skill.name)}</h4>
+                                    <p class="text-xs text-slate-400">${milestones.length ? `${completedMilestones} of ${milestones.length} build-up goals complete` : 'Add smaller goals to build toward this skill.'} · ${skill.completed ? 'Skill achieved' : 'In progress'}</p>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" data-toggle-skill="${escapeHtml(skill.id)}" class="min-h-10 px-3 py-2 ${skill.completed ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-500'} rounded-lg text-xs font-bold text-white">
+                                        <i class="fa-solid ${skill.completed ? 'fa-rotate-left' : 'fa-check'} mr-1"></i>${skill.completed ? 'Undo skill' : 'Skill achieved'}
+                                    </button>
+                                    <button type="button" data-edit-skill="${escapeHtml(skill.id)}" class="min-h-10 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300"><i class="fa-solid fa-pen mr-1"></i>Rename</button>
+                                    <button type="button" data-delete-skill="${escapeHtml(skill.id)}" aria-label="Delete ${escapeHtml(skill.name)}" class="min-h-10 min-w-10 px-3 py-2 bg-slate-800 hover:bg-rose-500/20 rounded-lg text-xs font-semibold text-slate-300 hover:text-rose-300"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+                            ${milestones.length ? `
+                                <ul class="space-y-2 border-t border-cardBorder pt-3">
+                                    ${milestones.map(milestone => `
+                                        <li class="flex items-center gap-2">
+                                            <input type="checkbox" data-toggle-milestone="${escapeHtml(skill.id)}" data-milestone-id="${escapeHtml(milestone.id)}" ${milestone.completed ? 'checked' : ''} class="h-5 w-5 shrink-0 accent-emerald-500">
+                                            <span class="flex-1 text-sm ${milestone.completed ? 'text-slate-400 line-through' : 'text-slate-200'}">${escapeHtml(milestone.name)}</span>
+                                            <button type="button" data-edit-milestone="${escapeHtml(skill.id)}" data-milestone-id="${escapeHtml(milestone.id)}" aria-label="Edit goal ${escapeHtml(milestone.name)}" class="min-h-9 min-w-9 rounded-lg text-slate-500 hover:text-indigo-300"><i class="fa-solid fa-pen"></i></button>
+                                            <button type="button" data-delete-milestone="${escapeHtml(skill.id)}" data-milestone-id="${escapeHtml(milestone.id)}" aria-label="Delete goal ${escapeHtml(milestone.name)}" class="min-h-9 min-w-9 rounded-lg text-slate-500 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            ` : ''}
+                            <form data-add-milestone="${escapeHtml(skill.id)}" class="flex gap-2 border-t border-cardBorder pt-3">
+                                <input name="milestoneName" type="text" maxlength="100" required placeholder="Add a build-up goal" aria-label="New goal for ${escapeHtml(skill.name)}" class="min-w-0 flex-1 px-3 py-2.5 bg-slate-950 border border-cardBorder rounded-lg text-sm text-white">
+                                <button type="submit" class="min-h-11 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">Add goal</button>
+                            </form>
+                        </article>
+                    `;
+                }).join('')
                 : '<p class="text-xs text-slate-500 bg-slate-900/50 rounded-xl p-4">Add your first skill or goal above.</p>';
 
             skillsList.querySelectorAll('[data-toggle-skill]').forEach(button => {
                 button.addEventListener('click', () => toggleSkillCompletion(button.dataset.toggleSkill));
+            });
+            skillsList.querySelectorAll('[data-toggle-milestone]').forEach(input => {
+                input.addEventListener('change', () => toggleSkillMilestone(input.dataset.toggleMilestone, input.dataset.milestoneId));
+            });
+            skillsList.querySelectorAll('[data-delete-milestone]').forEach(button => {
+                button.addEventListener('click', () => deleteSkillMilestone(button.dataset.deleteMilestone, button.dataset.milestoneId));
+            });
+            skillsList.querySelectorAll('[data-edit-milestone]').forEach(button => {
+                button.addEventListener('click', () => editSkillMilestone(button.dataset.editMilestone, button.dataset.milestoneId));
+            });
+            skillsList.querySelectorAll('[data-add-milestone]').forEach(form => {
+                form.addEventListener('submit', event => {
+                    event.preventDefault();
+                    addSkillMilestone(form.dataset.addMilestone, form.elements.milestoneName.value);
+                });
             });
             skillsList.querySelectorAll('[data-edit-skill]').forEach(button => {
                 button.addEventListener('click', () => editSkill(button.dataset.editSkill));
@@ -1823,12 +1931,80 @@
         function handleAddSkill(event) {
             event.preventDefault();
             const name = document.getElementById('skillName').value.trim();
+            const milestoneNames = document.getElementById('skillMilestones').value
+                .split(/\r?\n/)
+                .map(milestone => milestone.trim())
+                .filter(Boolean);
             if (!name) {
                 triggerToast('Enter a skill name.');
                 return;
             }
-            appState.skills.push({ id: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name, completed: false });
+            if (milestoneNames.length > 30) {
+                triggerToast('A skill can have up to 30 build-up goals.');
+                return;
+            }
+            appState.skills.push({
+                id: `skill-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name,
+                completed: false,
+                milestones: milestoneNames.map(milestoneName => ({
+                    id: `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                    name: milestoneName,
+                    completed: false
+                }))
+            });
             document.getElementById('skillForm').reset();
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function addSkillMilestone(skillId, name) {
+            const skill = appState.skills.find(item => item.id === skillId);
+            const milestoneName = String(name || '').trim();
+            if (!skill || !milestoneName) return;
+            if (!Array.isArray(skill.milestones)) skill.milestones = [];
+            if (skill.milestones.length >= 30) {
+                triggerToast('A skill can have up to 30 build-up goals.');
+                return;
+            }
+            skill.milestones.push({
+                id: `milestone-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                name: milestoneName,
+                completed: false
+            });
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function toggleSkillMilestone(skillId, milestoneId) {
+            const milestone = appState.skills.find(skill => skill.id === skillId)
+                ?.milestones?.find(item => item.id === milestoneId);
+            if (!milestone) return;
+            milestone.completed = !milestone.completed;
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function deleteSkillMilestone(skillId, milestoneId) {
+            const skill = appState.skills.find(item => item.id === skillId);
+            const milestone = skill?.milestones?.find(item => item.id === milestoneId);
+            if (!skill || !milestone || !confirm(`Remove the goal "${milestone.name}"?`)) return;
+            skill.milestones = skill.milestones.filter(item => item.id !== milestoneId);
+            saveAllChanges(false);
+            renderSkills();
+        }
+
+        function editSkillMilestone(skillId, milestoneId) {
+            const milestone = appState.skills.find(skill => skill.id === skillId)
+                ?.milestones?.find(item => item.id === milestoneId);
+            if (!milestone) return;
+            const name = prompt('Edit build-up goal:', milestone.name);
+            if (name === null) return;
+            if (!name.trim()) {
+                triggerToast('A goal cannot be empty.');
+                return;
+            }
+            milestone.name = name.trim();
             saveAllChanges(false);
             renderSkills();
         }
@@ -2022,9 +2198,7 @@
                 return;
             }
 
-            const today = new Date();
-            const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const weekStart = new Date(`${progressWeekStart}T12:00:00`);
             const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const sessionsByDay = weekdays.map(() => []);
             const weekDates = weekdays.map((_, index) => {
@@ -2047,25 +2221,33 @@
             const segments = weekdays.map((_, index) => {
                 const start = index * 360 / 7 + 1;
                 const end = (index + 1) * 360 / 7 - 1;
-                return `${sessionsByDay[index].length ? '#6366f1' : '#334155'} ${start}deg ${end}deg`;
+                const color = sessionsByDay[index].length
+                    ? (appState.categoryColors[sessionsByDay[index][0].category] || '#6366f1')
+                    : '#334155';
+                return `${color} ${start}deg ${end}deg`;
             });
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
             const dailyDetails = weekdays.map((weekday, index) => {
                 const sessions = sessionsByDay[index];
-                const categories = [...new Set(sessions.map(session => session.category))].join(', ');
                 return `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2 border-b border-cardBorder/70 last:border-0">
                         <button type="button" data-week-day="${index}" class="text-left text-xs font-semibold ${sessions.length ? 'text-white hover:text-indigo-300' : 'text-slate-500 hover:text-slate-300'}">${weekday} · ${formatDisplayDate(weekDates[index])}</button>
                         <div class="flex flex-wrap justify-end gap-1">
                             ${sessions.length
-                                ? sessions.map((session, sessionIndex) => `<button type="button" data-week-session="${index}:${sessionIndex}" class="text-xs text-indigo-300 hover:text-white bg-indigo-950/60 border border-indigo-800/60 rounded-lg px-2 py-1">${session.category}</button>`).join('')
+                                ? sessions.map((session, sessionIndex) => {
+                                    const color = appState.categoryColors[session.category] || '#6366f1';
+                                    return `<button type="button" data-week-session="${index}:${sessionIndex}" style="color:${color};border-color:${color};background-color:${color}22" class="text-xs hover:brightness-125 border rounded-lg px-2 py-1">${escapeHtml(session.category)}</button>`;
+                                }).join('')
                                 : '<span class="text-xs text-slate-500">No workout logged</span>'}
                         </div>
                     </div>
                 `;
             }).join('');
 
+            const rangeLabel = `${formatDisplayDate(weekDates[0])} – ${formatDisplayDate(weekDates[6])}`;
+            const selectedRange = document.getElementById('weeklySelectedRange');
+            if (selectedRange) selectedRange.textContent = rangeLabel;
             container.innerHTML = `
                 <div class="flex flex-col items-center gap-4">
                     <div class="relative w-56 h-56 rounded-full" style="background: conic-gradient(${segments.join(',')})">
@@ -2075,10 +2257,10 @@
                             <span class="text-[11px] text-indigo-300 mt-1">${eligibleSessions.length} workout${eligibleSessions.length === 1 ? '' : 's'}</span>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-400">${formatDisplayDate(weekDates[0])} – ${formatDisplayDate(weekDates[6])}</p>
+                    <p class="text-xs text-slate-400">${rangeLabel}</p>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white mb-2">This week <span class="font-normal text-slate-400">(${formatDisplayDate(formatDateLocal(weekStart))} – ${formatDisplayDate(formatDateLocal(weekEnd))})</span></h3>
+                    <h3 class="text-sm font-bold text-white mb-2">Workout progress <span class="font-normal text-slate-400">(${formatDisplayDate(formatDateLocal(weekStart))} – ${formatDisplayDate(formatDateLocal(weekEnd))})</span></h3>
                     <div>${dailyDetails}</div>
                 </div>
             `;
@@ -2094,6 +2276,18 @@
                 });
             });
             renderRepTrend();
+        }
+
+        function changeProgressWeek(delta) {
+            const weekStart = new Date(`${progressWeekStart}T12:00:00`);
+            weekStart.setDate(weekStart.getDate() + (delta * 7));
+            progressWeekStart = formatDateLocal(weekStart);
+            renderWeeklyProgress();
+        }
+
+        function goToCurrentProgressWeek() {
+            progressWeekStart = getWeekStartDate(formatDateLocal(new Date()));
+            renderWeeklyProgress();
         }
 
         function parseTotalReps(value) {
@@ -2127,7 +2321,7 @@
             appState.workoutSessions.forEach(session => {
                 if (category !== 'all' && session.category !== category) return;
                 const reps = parseTotalReps(session.totalReps);
-                if (reps === null || session.date < formatDateLocal(startDate) || session.date > formatDateLocal(today)) return;
+                if (reps === null || reps <= 0 || session.date < formatDateLocal(startDate) || session.date > formatDateLocal(today)) return;
                 const sessionDate = new Date(`${session.date}T12:00:00`);
                 if (weeklyBuckets) sessionDate.setDate(sessionDate.getDate() - ((sessionDate.getDay() + 6) % 7));
                 const bucket = buckets.find(item => item.date === formatDateLocal(sessionDate));
@@ -2147,7 +2341,8 @@
             const padding = { top: 18, right: 20, bottom: 42, left: 52 };
             const plotWidth = width - padding.left - padding.right;
             const plotHeight = height - padding.top - padding.bottom;
-            const maxTotal = Math.max(...buckets.map(bucket => bucket.total), 1);
+            const plottedBuckets = buckets.filter(bucket => bucket.hasData);
+            const maxTotal = Math.max(...plottedBuckets.map(bucket => bucket.total), 1);
             const tickStep = Math.max(1, Math.ceil(maxTotal / 4));
             const yMax = tickStep * 4;
             const xFor = index => padding.left + (buckets.length === 1 ? plotWidth / 2 : index * plotWidth / (buckets.length - 1));
@@ -2158,8 +2353,12 @@
                 return `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#334155" stroke-width="1"/>
                         <text x="${padding.left - 8}" y="${y + 4}" fill="#94a3b8" font-size="10" text-anchor="end">${value}</text>`;
             }).join('');
-            const points = buckets.map((bucket, index) => `${xFor(index)},${yFor(bucket.total)}`).join(' ');
-            const pointMarks = buckets.map((bucket, index) => {
+            const points = plottedBuckets.map(bucket => {
+                const index = buckets.indexOf(bucket);
+                return `${xFor(index)},${yFor(bucket.total)}`;
+            }).join(' ');
+            const pointMarks = plottedBuckets.map(bucket => {
+                const index = buckets.indexOf(bucket);
                 const x = xFor(index);
                 const y = yFor(bucket.total);
                 return `<circle cx="${x}" cy="${y}" r="3.5" fill="#22d3ee"><title>${formatDisplayDate(bucket.date)}: ${Math.round(bucket.total)} reps</title></circle>`;
@@ -2201,75 +2400,82 @@
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
             document.getElementById('calendarMonthYear').innerText = `${monthNames[month]} ${year}`;
-
             const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
             const grid = document.getElementById('calendarDaysGrid');
             grid.innerHTML = '';
-
             const todayStr = formatDateLocal(new Date());
+            const gridStart = new Date(year, month, 1 - firstDay);
 
-            for (let i = 0; i < firstDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'bg-slate-950/20 rounded-xl border border-slate-900 p-1.5 opacity-20 pointer-events-none min-h-[75px]';
-                grid.appendChild(emptyCell);
-            }
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const monthStr = String(month + 1).padStart(2, '0');
-                const dayStr = String(d).padStart(2, '0');
-                const dateStr = `${year}-${monthStr}-${dayStr}`;
-
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(gridStart);
+                date.setDate(gridStart.getDate() + i);
+                const dateStr = formatDateLocal(date);
+                const isCurrentMonth = date.getMonth() === month;
                 const planned = appState.calendarSchedule[dateStr];
                 const completedSessions = appState.workoutSessions.filter(s => s.date === dateStr);
                 const isCompleted = completedSessions.length > 0;
                 const isToday = todayStr === dateStr;
+                const weekStart = getWeekStartDate(dateStr);
+                const isDeload = Boolean(appState.deloadWeeks[weekStart]);
 
                 const cell = document.createElement('div');
                 let borderStyle = isToday ? 'border-amber-500/80 bg-slate-900/90 ring-1 ring-amber-500/50' : 'border-cardBorder bg-slate-900/40';
-                cell.className = `rounded-xl border ${borderStyle} p-2 flex flex-col justify-between hover:border-indigo-500/80 cursor-pointer transition-all min-h-[80px]`;
+                cell.className = `rounded-xl border ${borderStyle} p-1.5 sm:p-2 flex flex-col justify-between hover:border-indigo-500/80 cursor-pointer transition-all min-h-[76px] sm:min-h-[92px] ${isCurrentMonth ? '' : 'opacity-55'}`;
                 cell.onclick = () => openScheduleModal(dateStr);
 
-                const colorMap = {
-                    'Push': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                    'Pull': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                    'Legs': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                    'Core': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-                    'Warm-Up': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-                    'Cardio': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-                    'Mobility / Stability': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-                    'Full Body': 'bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30',
-                    'Rest': 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                const badgeForCategory = (category, label) => {
+                    if (category === 'Warm-Up') return '';
+                    const color = appState.categoryColors[category] || '#64748b';
+                    return `<span class="calendar-category-badge text-[9px] font-bold px-1.5 py-0.5 rounded border truncate" style="color:${color};border-color:${color};background-color:${color}22">${escapeHtml(label)}</span>`;
                 };
                 let badgeHtml = '';
-                if (planned) {
-                    const style = colorMap[planned.category] || 'bg-slate-800 text-slate-300 border-slate-700';
-                    badgeHtml = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}">${planned.category}</span>`;
+                if (planned && planned.category) {
+                    badgeHtml = badgeForCategory(planned.category, planned.category);
                 }
 
                 const checkIcon = isCompleted ? `<span class="text-emerald-400 text-xs" title="Logged Session"><i class="fa-solid fa-circle-check"></i></span>` : '';
                 const completedBadges = completedSessions.map(session => {
-                    const style = colorMap[session.category] || 'bg-slate-800 text-slate-300 border-slate-700';
-                    return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded border truncate ${style}" title="Completed: ${session.category}">${session.category} ✓</span>`;
+                    return badgeForCategory(session.category, `${session.category} ✓`);
                 }).join('');
 
                 cell.innerHTML = `
                     <div class="flex justify-between items-center w-full">
-                        <span class="text-xs font-bold ${isToday ? 'text-amber-400' : 'text-slate-300'}">${d}</span>
+                        <span class="text-xs font-bold ${isToday ? 'text-amber-400' : 'text-slate-300'}">${date.getDate()}</span>
                         ${checkIcon}
                     </div>
                     <div class="mt-1 flex flex-col gap-1">
                         ${badgeHtml}
-                        ${planned && planned.notes ? `<p class="text-[9px] text-slate-400 truncate">${planned.notes}</p>` : ''}
+                        ${isDeload ? '<span class="text-[8px] font-bold text-amber-200 bg-amber-500/20 border border-amber-500/40 rounded px-1 py-0.5 truncate">DELOAD</span>' : ''}
+                        ${planned && planned.notes ? `<p class="text-[9px] text-slate-400 truncate">${escapeHtml(planned.notes)}</p>` : ''}
                         ${completedBadges}
                     </div>
                 `;
                 grid.appendChild(cell);
             }
+            renderCategoryColorControls();
+        }
+
+        function renderCategoryColorControls() {
+            const container = document.getElementById('calendarCategoryColors');
+            if (!container) return;
+            container.innerHTML = WORKOUT_CATEGORIES.map(category => `
+                <label class="flex items-center gap-3 rounded-xl border border-cardBorder bg-slate-900 p-3 min-h-14">
+                    <input type="color" data-category-color="${escapeHtml(category)}" value="${appState.categoryColors[category]}" aria-label="${escapeHtml(category)} color" class="h-9 w-10 cursor-pointer rounded bg-transparent">
+                    <span class="text-xs font-semibold text-slate-200">${escapeHtml(category)}</span>
+                </label>
+            `).join('');
+            container.querySelectorAll('[data-category-color]').forEach(input => {
+                input.addEventListener('change', () => {
+                    appState.categoryColors[input.dataset.categoryColor] = input.value;
+                    saveAllChanges(false);
+                    renderCalendar();
+                    renderWeeklyProgress();
+                });
+            });
         }
 
         function changeMonth(delta) {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + delta, 1);
             renderCalendar();
         }
 
@@ -2310,10 +2516,11 @@
                 document.getElementById('scheduleNotes').value = existing.notes || '';
                 document.getElementById('deleteScheduleBtn').classList.remove('hidden');
             } else {
-                document.getElementById('scheduleCategory').value = 'Push';
+                document.getElementById('scheduleCategory').value = '';
                 document.getElementById('scheduleNotes').value = '';
                 document.getElementById('deleteScheduleBtn').classList.add('hidden');
             }
+            document.getElementById('deloadWeekToggle').checked = Boolean(appState.deloadWeeks[getWeekStartDate(dateStr)]);
             document.getElementById('scheduleModal').classList.remove('hidden');
         }
 
@@ -2334,8 +2541,18 @@
 
             const category = document.getElementById('scheduleCategory').value;
             const notes = document.getElementById('scheduleNotes').value.trim();
+            const weekStart = getWeekStartDate(activeScheduleDateStr);
 
-            appState.calendarSchedule[activeScheduleDateStr] = { category, notes };
+            if (category || notes) {
+                appState.calendarSchedule[activeScheduleDateStr] = { category, notes };
+            } else {
+                delete appState.calendarSchedule[activeScheduleDateStr];
+            }
+            if (document.getElementById('deloadWeekToggle').checked) {
+                appState.deloadWeeks[weekStart] = true;
+            } else {
+                delete appState.deloadWeeks[weekStart];
+            }
             saveAllChanges(true);
             renderCalendar();
             closeScheduleModal();
